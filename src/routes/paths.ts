@@ -1,0 +1,16 @@
+export const PATHS = {
+  login: '/login',
+  signup: '/signup',
+  clubs: '/clubs',
+  createClub: '/clubs/new',
+  joinClub: '/clubs/join',
+  clubSettings: '/clubs/:clubId/settings',
+  dashboard: '/dashboard',
+  members: '/members',
+  calendar: '/calendar',
+  events: '/events',
+  attendance: '/attendance',
+  fees: '/fees',
+  notifications: '/notifications',
+  profile: '/profile',
+} as const

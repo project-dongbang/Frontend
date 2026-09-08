@@ -1,6 +1,6 @@
-import dongbangLogo from '../../assets/dongbang-logo.svg'
-import googleIcon from '../../assets/google.svg'
-import kakaoIcon from '../../assets/kakao.svg'
+import dongbangLogo from '../../../assets/dongbang-logo.svg'
+import googleIcon from '../../../assets/google.svg'
+import kakaoIcon from '../../../assets/kakao.svg'
 import './LoginPage.css'
 
 export function LoginPage() {
