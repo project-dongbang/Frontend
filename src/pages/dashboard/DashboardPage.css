@@ -1,0 +1,8 @@
+.dashboard-create-button { gap: 8px; }
+.dashboard-create-button img { width: 17px; height: 17px; }
+.fee-summary > span { margin-top: 0; }
+.fee-summary > strong { margin-top: 6px; }
+.fee-progress { display: flex; height: 8px; overflow: hidden; margin: 18px 0; border-radius: 99px; background: #edf0f2; }.fee-progress i { display: block; width: 78%; background: #214a6b; }.fee-progress b { display: block; flex: 1; background: #ff6b4a; }
+.fee-totals { display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 16px; }.fee-totals div + div { padding-left: 18px; border-left: 1px solid #e3e8ec; }.fee-totals span { display: block; color: #66717e; font-size: 11px; }.fee-totals strong { display: block; margin-top: 4px; font-family: Inter, sans-serif; font-size: 14px; }
+.recent-expenses { padding: 12px 0 0; margin: 0 -22px; border-top: 1px solid #edf0f2; list-style: none; }.recent-expenses li { display: flex; align-items: center; justify-content: space-between; padding: 10px 22px; }.recent-expenses span { display: grid; gap: 3px; }.recent-expenses b { font-size: 12px; }.recent-expenses small { color: #66717e; font-size: 10px; }.recent-expenses > li > strong { color: #d94c4c; font-family: Inter, sans-serif; font-size: 12px; }
+@media (max-width: 760px) { .fee-totals { gap: 12px; }.fee-totals div + div { padding-left: 12px; }.recent-expenses { margin-inline: -14px; }.recent-expenses li { padding-inline: 14px; } }
