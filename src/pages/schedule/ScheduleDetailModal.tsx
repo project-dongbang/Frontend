@@ -24,10 +24,6 @@ export function ScheduleDetailModal({
   const dialogRef = useRef<HTMLDialogElement>(null)
     const [joined, setJoined] = useState(false)
 
-    useEffect(() => {
-    setJoined(false)
-    }, [item?.id])
-
   useEffect(() => {
     const dialog = dialogRef.current
 

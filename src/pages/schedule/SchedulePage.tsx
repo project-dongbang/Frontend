@@ -98,28 +98,31 @@ const handleDeleteRequest = (item: CalendarItem) => {
         </div>
       </section>
       <ScheduleFormModal
-  open={isCreateModalOpen}
-  onClose={() => setIsCreateModalOpen(false)}
-/>
-<ScheduleFormModal
-  open={editingItem !== null}
-  item={editingItem}
-  onClose={() => setEditingItem(null)}
-/>
+        key={isCreateModalOpen ? 'create-open' : 'create-closed'}
+        open={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
+      <ScheduleFormModal
+        key={editingItem?.id ?? 'edit-empty'}
+        open={editingItem !== null}
+        item={editingItem}
+        onClose={() => setEditingItem(null)}
+      />
 
-<ScheduleDetailModal
-  open={selectedItem !== null}
-  item={selectedItem}
-  onClose={() => setSelectedItem(null)}
-  onEditRequest={handleEditRequest}
-  onDeleteRequest={handleDeleteRequest}
-/>
+      <ScheduleDetailModal
+        key={selectedItem?.id ?? 'empty'}
+        open={selectedItem !== null}
+        item={selectedItem}
+        onClose={() => setSelectedItem(null)}
+        onEditRequest={handleEditRequest}
+        onDeleteRequest={handleDeleteRequest}
+      />
 
-<ScheduleDeleteModal
-  open={deletingItem !== null}
-  item={deletingItem}
-  onClose={() => setDeletingItem(null)}
-/>
+      <ScheduleDeleteModal
+        open={deletingItem !== null}
+        item={deletingItem}
+        onClose={() => setDeletingItem(null)}
+      />
     </DashboardShell>
   )
 }

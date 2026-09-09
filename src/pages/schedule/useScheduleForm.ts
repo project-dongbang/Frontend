@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
-import type { FormEvent } from 'react'
+import { useState } from 'react'
+import type { SubmitEvent } from 'react'
+
 import type { CalendarItem } from './scheduleMock'
 
 export type ScheduleFormValues = {
@@ -26,48 +27,49 @@ const initialValues: ScheduleFormValues = {
   description: '',
 }
 
+function getInitialValues(
+  item: CalendarItem | null,
+): ScheduleFormValues {
+  if (!item) {
+    return initialValues
+  }
+
+  return {
+    type:
+      item.type === 'event'
+        ? 'event'
+        : 'schedule',
+
+    visibility: 'all',
+
+    title: item.title,
+    start: item.start,
+    end: item.end,
+    location: item.location ?? '',
+
+    capacity:
+      item.capacity !== undefined
+        ? String(item.capacity)
+        : '',
+
+    deadline: item.deadline ?? '',
+    description: item.description ?? '',
+  }
+}
+
 export function useScheduleForm(
-  open: boolean,
   item: CalendarItem | null,
   onClose: () => void,
 ) {
   const [values, setValues] =
-    useState<ScheduleFormValues>(initialValues)
+    useState<ScheduleFormValues>(() =>
+      getInitialValues(item),
+    )
 
   const [error, setError] = useState('')
 
   const isEvent = values.type === 'event'
   const isEdit = item !== null
-
-  useEffect(() => {
-    if (!open) return
-
-    setError('')
-
-    if (item) {
-      setValues({
-        type:
-          item.type === 'event'
-            ? 'event'
-            : 'schedule',
-        visibility: 'all',
-        title: item.title,
-        start: item.start,
-        end: item.end,
-        location: item.location ?? '',
-        capacity:
-          item.capacity !== undefined
-            ? String(item.capacity)
-            : '',
-        deadline: item.deadline ?? '',
-        description: item.description ?? '',
-      })
-
-      return
-    }
-
-    setValues(initialValues)
-  }, [open, item])
 
   const updateField = (
     field: keyof ScheduleFormValues,
@@ -82,13 +84,12 @@ export function useScheduleForm(
   }
 
   const handleClose = () => {
-    setValues(initialValues)
     setError('')
     onClose()
   }
 
   const handleSubmit = (
-    event: FormEvent<HTMLFormElement>,
+    event: SubmitEvent<HTMLFormElement>,
   ) => {
     event.preventDefault()
 
@@ -128,11 +129,21 @@ export function useScheduleForm(
 
     if (isEdit) {
       // TODO: 일정 수정 API 연결
-      console.log('수정할 일정 ID:', item?.id)
-      console.log('수정 데이터:', values)
+      console.log(
+        '수정할 일정 ID:',
+        item?.id,
+      )
+
+      console.log(
+        '수정 데이터:',
+        values,
+      )
     } else {
       // TODO: 일정 등록 API 연결
-      console.log('등록 데이터:', values)
+      console.log(
+        '등록 데이터:',
+        values,
+      )
     }
 
     handleClose()

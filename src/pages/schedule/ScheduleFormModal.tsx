@@ -26,7 +26,6 @@ export function ScheduleFormModal({
     handleClose,
     handleSubmit,
   } = useScheduleForm(
-    open,
     item,
     onClose,
   )
