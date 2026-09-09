@@ -4,6 +4,7 @@ type CalendarGridProps = {
   year: number
   month: number
   items: CalendarItem[]
+  onItemClick: (item: CalendarItem) => void
 }
 
 const weekDays = ['일', '월', '화', '수', '목', '금', '토']
@@ -20,6 +21,7 @@ export function CalendarGrid({
   year,
   month,
   items,
+  onItemClick,
 }: CalendarGridProps) {
   const firstDay = new Date(year, month, 1).getDay()
   const lastDate = new Date(year, month + 1, 0).getDate()
@@ -92,6 +94,11 @@ export function CalendarGrid({
                         ? 'fee'
                         : ''
                   }`}
+                  onClick={() => {
+                    if (item.type !== 'fee') {
+                      onItemClick(item)
+                    }
+                  }}
                 >
                   {item.type === 'fee'
                     ? item.title
