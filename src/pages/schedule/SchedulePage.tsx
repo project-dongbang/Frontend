@@ -1,17 +1,25 @@
 import { useState } from 'react'
 import { DashboardShell } from '../dashboard/DashboardShell'
 import { CalendarGrid } from './CalendarGrid'
-import { calendarMockData } from './scheduleMock'
+import {calendarMockData,type CalendarItem,} from './scheduleMock'
+import { ScheduleFormModal } from './ScheduleFormModal'
+import { ScheduleDetailModal } from './ScheduleDetailModal'
+import { ScheduleDeleteModal } from './ScheduleDeleteModal'
 import './schedule.css'
 
 export function SchedulePage() {
-  const [currentDate, setCurrentDate] = useState(
-    new Date(2026, 8, 1),
-  )
+  const [currentDate, setCurrentDate] = useState(new Date())
 
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [selectedItem, setSelectedItem] =
+  useState<CalendarItem | null>(null)
+  const [editingItem, setEditingItem] =
+  useState<CalendarItem | null>(null)
 
+const [deletingItem, setDeletingItem] =
+  useState<CalendarItem | null>(null)
   const handlePreviousMonth = () => {
     setCurrentDate(new Date(year, month - 1, 1))
   }
@@ -19,6 +27,16 @@ export function SchedulePage() {
   const handleNextMonth = () => {
     setCurrentDate(new Date(year, month + 1, 1))
   }
+
+  const handleEditRequest = (item: CalendarItem) => {
+  setSelectedItem(null)
+  setEditingItem(item)
+}
+
+const handleDeleteRequest = (item: CalendarItem) => {
+  setSelectedItem(null)
+  setDeletingItem(item)
+}
 
   return (
     <DashboardShell role="admin">
@@ -39,6 +57,7 @@ export function SchedulePage() {
           <button
             type="button"
             className="schedule-create-button"
+            onClick={() => setIsCreateModalOpen(true)}
           >
             <span>＋</span>
             일정 등록
@@ -74,9 +93,36 @@ export function SchedulePage() {
             year={year}
             month={month}
             items={calendarMockData}
+            onItemClick={setSelectedItem}
           />
         </div>
       </section>
+      <ScheduleFormModal
+        key={isCreateModalOpen ? 'create-open' : 'create-closed'}
+        open={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
+      <ScheduleFormModal
+        key={editingItem?.id ?? 'edit-empty'}
+        open={editingItem !== null}
+        item={editingItem}
+        onClose={() => setEditingItem(null)}
+      />
+
+      <ScheduleDetailModal
+        key={selectedItem?.id ?? 'empty'}
+        open={selectedItem !== null}
+        item={selectedItem}
+        onClose={() => setSelectedItem(null)}
+        onEditRequest={handleEditRequest}
+        onDeleteRequest={handleDeleteRequest}
+      />
+
+      <ScheduleDeleteModal
+        open={deletingItem !== null}
+        item={deletingItem}
+        onClose={() => setDeletingItem(null)}
+      />
     </DashboardShell>
   )
 }
