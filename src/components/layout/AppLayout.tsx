@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { BellIcon, CalendarIcon, CheckIcon, HomeIcon, MenuIcon, UsersIcon, WalletIcon } from '../icons'
+import { BellIcon, CalendarIcon, CheckIcon, HomeIcon, MenuIcon, SettingsIcon, UsersIcon, WalletIcon } from '../icons'
 
 type NavItem = { label: string; icon: string }
 
@@ -8,6 +8,10 @@ type AppLayoutProps = {
   navItems: NavItem[]
   activeNav: string
   onNavChange: (label: string) => void
+  onOrganizationClick?: () => void
+  onSettingsClick?: () => void
+  settingsActive?: boolean
+  showSettings?: boolean
   organizationName: string
   userName: string
 }
@@ -20,8 +24,24 @@ const icons = {
   wallet: WalletIcon,
 }
 
-export function AppLayout({ children, navItems, activeNav, onNavChange, organizationName, userName }: AppLayoutProps) {
+export function AppLayout({ children, navItems, activeNav, onNavChange, onOrganizationClick, onSettingsClick, settingsActive = false, showSettings = navItems.length === 5, organizationName, userName }: AppLayoutProps) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const handleOrganizationClick = () => {
+    if (onOrganizationClick) {
+      onOrganizationClick()
+      return
+    }
+
+    window.location.assign('/clubs')
+  }
+  const handleSettingsClick = () => {
+    if (onSettingsClick) {
+      onSettingsClick()
+      return
+    }
+
+    window.location.assign('/clubs/dlog/settings')
+  }
 
   return (
     <div className="app-shell">
@@ -36,7 +56,7 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, organiza
           <button type="button">회비⌄</button>
           <button type="button">일정⌄</button>
         </nav>
-        <div className="topbar-actions">
+        <div className="topbar-actions" onClick={(event) => { if ((event.target as HTMLElement).closest('.organization-switcher')) handleOrganizationClick() }}>
           <button type="button" className="organization-switcher"><b>D</b>{organizationName}⌄</button>
           <button type="button" className="icon-button notification-button" aria-label="알림"><BellIcon /><i>3</i></button>
           <span className="avatar">{userName.slice(0, 1)}</span>
@@ -62,6 +82,17 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, organiza
           <p>서비스 이용 중 궁금한 점을 확인해 보세요.</p>
           <button type="button">도움말 보기</button>
         </div>
+        {showSettings && <div className="sidebar-settings">
+          <button
+            type="button"
+            className={settingsActive ? 'active' : ''}
+            aria-label="동아리 설정"
+            onClick={handleSettingsClick}
+          >
+            <SettingsIcon />
+            <span>동아리 설정</span>
+          </button>
+        </div>}
       </aside>
 
       <main><div className="content">{children}</div></main>
