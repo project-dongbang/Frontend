@@ -14,6 +14,7 @@ type AppLayoutProps = {
   showSettings?: boolean
   organizationName: string
   userName: string
+  notificationCount?: number
 }
 
 const icons = {
@@ -31,7 +32,7 @@ const categoryMenus = [
   { title: '일정', items: [{ label: '캘린더', path: '/calendar' }, { label: '일정 관리', path: '/calendar' }] },
 ]
 
-export function AppLayout({ children, navItems, activeNav, onNavChange, onOrganizationClick, onSettingsClick, settingsActive = false, showSettings = navItems.length === 5, organizationName, userName }: AppLayoutProps) {
+export function AppLayout({ children, navItems, activeNav, onNavChange, onOrganizationClick, onSettingsClick, settingsActive = false, showSettings = navItems.length === 5, organizationName, userName, notificationCount = 3 }: AppLayoutProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [categoryMenu, setCategoryMenu] = useState<{ index: number; left: number } | null>(null)
   const handleOrganizationClick = () => {
@@ -62,7 +63,7 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
           const target = event.target instanceof Element ? event.target.closest('button') : null
           const buttons = Array.from(event.currentTarget.querySelectorAll('button'))
           const index = target ? buttons.indexOf(target) : -1
-          if (index >= 0 && target) {
+          if (index >= 0 && index < categoryMenus.length && target) {
             const left = target.getBoundingClientRect().left
             setCategoryMenu((current) => current?.index === index ? null : { index, left })
           }
@@ -71,6 +72,7 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
           <button type="button">활동⌄</button>
           <button type="button">회비⌄</button>
           <button type="button">일정⌄</button>
+          <button type="button" onClick={() => window.location.assign('/gallery')}>사진첩</button>
         </nav>
         {categoryMenu && <div key={categoryMenu.index} className="category-nav-menu" style={{ left: categoryMenu.left }} role="menu" aria-label={`${categoryMenus[categoryMenu.index].title} 메뉴`}>
           <strong>{categoryMenus[categoryMenu.index].title}</strong>
@@ -78,7 +80,7 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
         </div>}
         <div className="topbar-actions" onClick={(event) => { if ((event.target as HTMLElement).closest('.organization-switcher')) handleOrganizationClick() }}>
           <button type="button" className="organization-switcher"><b>D</b>{organizationName}⌄</button>
-          <button type="button" className="icon-button notification-button" aria-label="알림"><BellIcon /><i>3</i></button>
+          <button type="button" className="icon-button notification-button" aria-label={`알림 ${notificationCount}개`}><BellIcon /><i>{notificationCount}</i></button>
           <span className="avatar">{userName.slice(0, 1)}</span>
           <button type="button" className="mobile-menu" aria-label="메뉴" onClick={() => setMenuOpen(!menuOpen)}><MenuIcon /></button>
         </div>

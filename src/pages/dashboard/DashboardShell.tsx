@@ -26,7 +26,6 @@ export function DashboardShell({
 }) {
   const [activeNav, setActiveNav] = useState('대시보드')
   const isAdmin = role === 'admin'
-
   return (
     <AppLayout
       activeNav={activeNav}
@@ -34,6 +33,7 @@ export function DashboardShell({
       navItems={isAdmin ? adminNavItems : memberNavItems}
       organizationName="D.Log 개발동아리"
       userName={isAdmin ? '김동방' : '남은우'}
+      notificationCount={isAdmin ? 3 : 1}
     >
       {children}
     </AppLayout>
