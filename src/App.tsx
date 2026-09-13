@@ -6,6 +6,7 @@ import { ClubCreatePage } from './pages/clubs/ClubCreatePage'
 import { ClubJoinPage } from './pages/clubs/ClubJoinPage'
 import { ClubSelectionPage } from './pages/clubs/ClubSelectionPage'
 import { ClubSettingsPage } from './pages/clubs/ClubSettingsPage'
+import { GalleryPage } from './pages/gallery/GalleryPage'
 import { PATHS } from './routes/paths'
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
     <Routes>
       <Route path={PATHS.login} element={<LoginPage />} />
       <Route path={PATHS.dashboard} element={<DashboardPage />} />
+      <Route path={PATHS.gallery} element={<GalleryPage />} />
 
       <Route path={PATHS.calendar} element={<SchedulePage />} />
 
