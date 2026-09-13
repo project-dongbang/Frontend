@@ -6,6 +6,7 @@ export const PATHS = {
   joinClub: '/clubs/join',
   clubSettings: '/clubs/:clubId/settings',
   dashboard: '/dashboard',
+  gallery: '/gallery',
   members: '/members',
   calendar: '/calendar',
   events: '/events',
