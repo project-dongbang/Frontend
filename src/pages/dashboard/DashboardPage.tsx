@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router-dom'
 import { AdminDashboard } from './AdminDashboard'
 import { MemberDashboard } from './MemberDashboard'
+import './DashboardPage.css'
 
 export type DashboardRole = 'admin' | 'member'
 

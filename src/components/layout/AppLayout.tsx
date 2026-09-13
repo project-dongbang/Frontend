@@ -10,6 +10,7 @@ type AppLayoutProps = {
   onNavChange: (label: string) => void
   organizationName: string
   userName: string
+  notificationCount?: number
 }
 
 const icons = {
@@ -20,7 +21,7 @@ const icons = {
   wallet: WalletIcon,
 }
 
-export function AppLayout({ children, navItems, activeNav, onNavChange, organizationName, userName }: AppLayoutProps) {
+export function AppLayout({ children, navItems, activeNav, onNavChange, organizationName, userName, notificationCount = 3 }: AppLayoutProps) {
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
@@ -35,10 +36,11 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, organiza
           <button type="button">활동⌄</button>
           <button type="button">회비⌄</button>
           <button type="button">일정⌄</button>
+          <button type="button">사진첩</button>
         </nav>
         <div className="topbar-actions">
           <button type="button" className="organization-switcher"><b>D</b>{organizationName}⌄</button>
-          <button type="button" className="icon-button notification-button" aria-label="알림"><BellIcon /><i>3</i></button>
+          <button type="button" className="icon-button notification-button" aria-label={`알림 ${notificationCount}개`}><BellIcon /><i>{notificationCount}</i></button>
           <span className="avatar">{userName.slice(0, 1)}</span>
           <button type="button" className="mobile-menu" aria-label="메뉴" onClick={() => setMenuOpen(!menuOpen)}><MenuIcon /></button>
         </div>
