@@ -1,0 +1,23 @@
+.my-page-modal { width: min(100%, 620px); }
+.my-page-modal .modal-body { gap: 24px; }
+.profile-summary { display: flex; align-items: center; gap: 16px; padding-bottom: 22px; border-bottom: 1px solid #edf0f2; }
+.profile-avatar { display: grid; width: 64px; height: 64px; flex: 0 0 64px; place-items: center; border-radius: 50%; color: #214a6b; background: #dce7ed; font-size: 24px; font-weight: 800; }
+.profile-summary strong { display: block; color: #17212b; font-size: 17px; }
+.profile-summary p { margin: 4px 0 8px; color: #66717e; font-size: 13px; }
+.profile-image-actions { display: flex; gap: 7px; color: #a1abb4; font-size: 12px; }
+.profile-image-actions button, .logout-button { padding: 0; border: 0; color: #214a6b; background: transparent; font: inherit; font-weight: 700; }
+.profile-image-actions button:hover, .logout-button:hover { text-decoration: underline; }
+.profile-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 16px; }
+.my-page-modal-actions { display: flex; align-items: center; gap: 8px; }
+.my-page-modal-actions .logout-button { margin-left: auto; color: #8a969f; font-size: 13px; }
+.activity-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.activity-summary > div { display: grid; gap: 8px; padding: 17px 18px; border: 1px solid #e3e8ec; border-radius: 13px; background: #f9fbfc; }
+.activity-summary span { color: #71808c; font-size: 12px; font-weight: 700; }
+.activity-summary strong { color: #17364f; font-size: 20px; letter-spacing: -.4px; }
+.activity-list { display: grid; gap: 0; }
+.activity-list h3 { margin: 0 0 8px; color: #17212b; font-size: 15px; }
+.activity-list article { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 2px; border-top: 1px solid #edf0f2; }
+.activity-list article > div { display: grid; gap: 4px; }
+.activity-list article strong { color: #273440; font-size: 14px; }
+.activity-list article span { color: #77838d; font-size: 12px; }
+@media (max-width: 520px) { .profile-form-grid, .activity-summary { grid-template-columns: 1fr; }.my-page-modal-actions { flex-wrap: wrap; }.my-page-modal-actions .logout-button { width: 100%; margin: 3px 0 0; text-align: right; } }

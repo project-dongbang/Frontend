@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { BellIcon, CalendarIcon, CheckIcon, HomeIcon, MenuIcon, SettingsIcon, UsersIcon, WalletIcon } from '../icons'
+import { MyPageModals } from './MyPageModals'
 
 type NavItem = { label: string; icon: string }
 
@@ -35,6 +36,8 @@ const categoryMenus = [
 export function AppLayout({ children, navItems, activeNav, onNavChange, onOrganizationClick, onSettingsClick, settingsActive = false, showSettings = navItems.length === 5, organizationName, userName, notificationCount = 3 }: AppLayoutProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [categoryMenu, setCategoryMenu] = useState<{ index: number; left: number } | null>(null)
+  const [myPageMode, setMyPageMode] = useState<'profile' | 'activity' | null>(null)
+  const [displayName, setDisplayName] = useState(userName)
   const handleOrganizationClick = () => {
     if (onOrganizationClick) {
       onOrganizationClick()
@@ -79,9 +82,9 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
           {categoryMenus[categoryMenu.index].items.map((item) => <button key={item.label} type="button" role="menuitem" onClick={() => window.location.assign(item.path)}>{item.label}</button>)}
         </div>}
         <div className="topbar-actions" onClick={(event) => { if ((event.target as HTMLElement).closest('.organization-switcher')) handleOrganizationClick() }}>
-          <button type="button" className="organization-switcher"><b>D</b>{organizationName}⌄</button>
+          <button type="button" className="organization-switcher"><b>D</b><span>{organizationName}</span><i aria-hidden="true">⌄</i></button>
           <button type="button" className="icon-button notification-button" aria-label={`알림 ${notificationCount}개`}><BellIcon /><i>{notificationCount}</i></button>
-          <span className="avatar">{userName.slice(0, 1)}</span>
+          <button type="button" className="avatar" aria-label="내 정보" onClick={() => setMyPageMode('profile')}>{displayName.slice(0, 1)}</button>
           <button type="button" className="mobile-menu" aria-label="메뉴" onClick={() => setMenuOpen(!menuOpen)}><MenuIcon /></button>
         </div>
       </header>
@@ -118,6 +121,7 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
       </aside>
 
       <main><div className="content">{children}</div></main>
+      <MyPageModals mode={myPageMode} userName={displayName} onClose={() => setMyPageMode(null)} onOpenActivity={() => setMyPageMode('activity')} onSavedName={setDisplayName} />
     </div>
   )
 }
