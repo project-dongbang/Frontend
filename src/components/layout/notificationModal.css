@@ -1,0 +1,14 @@
+.notification-modal { width: min(100%, 620px); }
+.notification-modal .modal-body { gap: 20px; padding-block: 24px; }
+.notification-intro { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.notification-intro p { margin: 0; color: #66717e; font-size: 14px; }
+.mark-all-read { min-height: 30px; padding: 0 8px; font-size: 12px; }
+.notification-list { display: grid; border-top: 1px solid #edf0f2; }
+.notification-list > button { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 16px; min-height: 88px; padding: 17px 18px; border: 0; border-bottom: 1px solid #edf0f2; color: #17212b; background: #fff; text-align: left; }
+.notification-list > button:hover { background: #f8fbfd; }
+.notification-list > button.is-unread { background: #f8fbfd; }
+.notification-list > button > span { display: grid; gap: 6px; }
+.notification-list strong { font-size: 14px; line-height: 1.45; }
+.notification-list small { color: #788590; font-size: 12px; }
+.notification-list em { color: #214a6b; font-size: 21px; font-style: normal; line-height: 1; }
+@media (max-width: 520px) { .notification-intro { align-items: start; }.notification-list > button { padding-inline: 10px; }.notification-list strong { font-size: 13px; } }
