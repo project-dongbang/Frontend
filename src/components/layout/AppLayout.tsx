@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { BellIcon, CalendarIcon, CheckIcon, HomeIcon, MenuIcon, SettingsIcon, UsersIcon, WalletIcon } from '../icons'
 import { MyPageModals } from './MyPageModals'
 import { HelpGuideModal } from './HelpGuideModal'
+import { NotificationModal, type NotificationItem } from './NotificationModal'
 
 type NavItem = { label: string; icon: string }
 
@@ -34,12 +35,21 @@ const categoryMenus = [
   { title: '일정', items: [{ label: '캘린더', path: '/calendar' }, { label: '일정 관리', path: '/calendar' }] },
 ]
 
-export function AppLayout({ children, navItems, activeNav, onNavChange, onOrganizationClick, onSettingsClick, settingsActive = false, showSettings = navItems.length === 5, organizationName, userName, notificationCount = 3 }: AppLayoutProps) {
+const initialNotifications: NotificationItem[] = [
+  { id: 'payment', title: '현재 납부 항목을 아직 납부하지 않은 멤버가 6명 있어요.', date: '9월 3일 · 새 알림', path: '/fees', unread: true },
+  { id: 'event', title: '9월 5일 신입 부원 환영 네트워킹을 준비해 주세요.', date: '9월 3일 · 새 알림', path: '/events', unread: true },
+  { id: 'attendance', title: '개강 총회 출석 명단을 확인할 수 있어요.', date: '9월 1일 · 새 알림', path: '/attendance', unread: true },
+]
+
+export function AppLayout({ children, navItems, activeNav, onNavChange, onOrganizationClick, onSettingsClick, settingsActive = false, showSettings = navItems.length === 5, organizationName, userName }: AppLayoutProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [categoryMenu, setCategoryMenu] = useState<{ index: number; left: number } | null>(null)
   const [myPageMode, setMyPageMode] = useState<'profile' | 'activity' | null>(null)
   const [helpGuideOpen, setHelpGuideOpen] = useState(false)
+  const [notificationOpen, setNotificationOpen] = useState(false)
+  const [notifications, setNotifications] = useState(initialNotifications)
   const [displayName, setDisplayName] = useState(userName)
+  const unreadCount = notifications.filter((notification) => notification.unread).length
   const handleOrganizationClick = () => {
     if (onOrganizationClick) {
       onOrganizationClick()
@@ -85,7 +95,7 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
         </div>}
         <div className="topbar-actions" onClick={(event) => { if ((event.target as HTMLElement).closest('.organization-switcher')) handleOrganizationClick() }}>
           <button type="button" className="organization-switcher"><b>D</b><span>{organizationName}</span><i aria-hidden="true">⌄</i></button>
-          <button type="button" className="icon-button notification-button" aria-label={`알림 ${notificationCount}개`}><BellIcon /><i>{notificationCount}</i></button>
+          <button type="button" className="icon-button notification-button" aria-label={`읽지 않은 알림 ${unreadCount}개`} onClick={() => setNotificationOpen(true)}><BellIcon />{unreadCount > 0 && <i>{unreadCount}</i>}</button>
           <button type="button" className="avatar" aria-label="내 정보" onClick={() => setMyPageMode('profile')}>{displayName.slice(0, 1)}</button>
           <button type="button" className="mobile-menu" aria-label="메뉴" onClick={() => setMenuOpen(!menuOpen)}><MenuIcon /></button>
         </div>
@@ -125,6 +135,17 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
       <main><div className="content">{children}</div></main>
       <MyPageModals mode={myPageMode} userName={displayName} onClose={() => setMyPageMode(null)} onOpenActivity={() => setMyPageMode('activity')} onSavedName={setDisplayName} />
       <HelpGuideModal open={helpGuideOpen} onClose={() => setHelpGuideOpen(false)} />
+      <NotificationModal
+        open={notificationOpen}
+        notifications={notifications}
+        onClose={() => setNotificationOpen(false)}
+        onMarkAllRead={() => setNotifications((items) => items.map((item) => ({ ...item, unread: false })))}
+        onNotificationClick={(id, path) => {
+          setNotifications((items) => items.map((item) => item.id === id ? { ...item, unread: false } : item))
+          setNotificationOpen(false)
+          window.location.assign(path)
+        }}
+      />
     </div>
   )
 }
