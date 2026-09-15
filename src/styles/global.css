@@ -31,3 +31,4 @@ main { min-height: 100vh; margin-left: 232px; padding: 96px 38px 48px; }.content
 @media (max-width: 760px) { .global-nav { display: none; }.sidebar { top: 56px; left: -232px; width: 232px; }.sidebar.is-open { left: 0; }.sidebar:hover { width: 232px; }.semester, .sidebar nav button span { opacity: 1; }.sidebar-help { display: none; } main { margin-left: 0; }.component-grid { grid-template-columns: 1fr; }.modal { max-height: calc(100dvh - 40px); overflow: auto; }.modal header, .modal-body, .modal footer { padding-inline: 20px; } }
 .modal header > button { display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1; }
 .organization-switcher i { display: grid; width: 14px; height: 14px; place-items: center; font-size: 15px; font-style: normal; line-height: 1; transform: translateY(-1px); }
+.sidebar:hover .sidebar-help { display: block; }
