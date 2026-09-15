@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { BellIcon, CalendarIcon, CheckIcon, HomeIcon, MenuIcon, SettingsIcon, UsersIcon, WalletIcon } from '../icons'
 import { MyPageModals } from './MyPageModals'
+import { HelpGuideModal } from './HelpGuideModal'
 
 type NavItem = { label: string; icon: string }
 
@@ -37,6 +38,7 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
   const [menuOpen, setMenuOpen] = useState(false)
   const [categoryMenu, setCategoryMenu] = useState<{ index: number; left: number } | null>(null)
   const [myPageMode, setMyPageMode] = useState<'profile' | 'activity' | null>(null)
+  const [helpGuideOpen, setHelpGuideOpen] = useState(false)
   const [displayName, setDisplayName] = useState(userName)
   const handleOrganizationClick = () => {
     if (onOrganizationClick) {
@@ -105,7 +107,7 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
         <div className="sidebar-help">
           <strong>도움이 필요하신가요?</strong>
           <p>서비스 이용 중 궁금한 점을 확인해 보세요.</p>
-          <button type="button">도움말 보기</button>
+          <button type="button" onClick={() => setHelpGuideOpen(true)}>도움말 보기</button>
         </div>
         {showSettings && <div className="sidebar-settings">
           <button
@@ -122,6 +124,7 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
 
       <main><div className="content">{children}</div></main>
       <MyPageModals mode={myPageMode} userName={displayName} onClose={() => setMyPageMode(null)} onOpenActivity={() => setMyPageMode('activity')} onSavedName={setDisplayName} />
+      <HelpGuideModal open={helpGuideOpen} onClose={() => setHelpGuideOpen(false)} />
     </div>
   )
 }
