@@ -8,6 +8,7 @@ import { ClubJoinPage } from './pages/clubs/ClubJoinPage'
 import { ClubSelectionPage } from './pages/clubs/ClubSelectionPage'
 import { ClubSettingsPage } from './pages/clubs/ClubSettingsPage'
 import { GalleryPage } from './pages/gallery/GalleryPage'
+import { FeesPage } from './pages/fees/FeesPage'
 import { PATHS } from './routes/paths'
 
 function App() {
@@ -19,7 +20,7 @@ function App() {
 
       <Route path={PATHS.calendar} element={<SchedulePage />} />
       <Route path={PATHS.attendance} element={<AttendancePage />} />
-
+      <Route path={PATHS.fees} element={<FeesPage />} />
       <Route path={PATHS.clubs} element={<ClubSelectionPage />} />
       <Route path={PATHS.createClub} element={<ClubCreatePage />} />
       <Route path={PATHS.joinClub} element={<ClubJoinPage />} />
