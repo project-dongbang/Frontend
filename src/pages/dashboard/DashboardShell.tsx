@@ -1,5 +1,7 @@
-import { useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { AppLayout } from '../../components/layout/AppLayout'
+import { PATHS } from '../../routes/paths'
 import type { DashboardRole } from './DashboardPage'
 
 const adminNavItems = [
@@ -24,12 +26,26 @@ export function DashboardShell({
   role: DashboardRole
   children: ReactNode
 }) {
-  const [activeNav, setActiveNav] = useState('대시보드')
+  const { pathname } = useLocation()
+  const navigate = useNavigate()
   const isAdmin = role === 'admin'
+  const navPaths: Record<string, string> = {
+    '대시보드': PATHS.dashboard,
+    '멤버 관리': PATHS.members,
+    '일정 · 행사': PATHS.calendar,
+    '출석 관리': PATHS.attendance,
+    '내 출석': PATHS.attendance,
+    '회비 관리': PATHS.fees,
+    '회비': PATHS.fees,
+  }
+  const activeNav = (isAdmin ? adminNavItems : memberNavItems).find((item) => navPaths[item.label] === pathname)?.label ?? ''
   return (
     <AppLayout
       activeNav={activeNav}
-      onNavChange={setActiveNav}
+      onNavChange={(label) => {
+        const path = navPaths[label]
+        if (path) navigate(`${path}${isAdmin ? '' : '?role=member'}`)
+      }}
       navItems={isAdmin ? adminNavItems : memberNavItems}
       organizationName="D.Log 개발동아리"
       userName={isAdmin ? '김동방' : '남은우'}
