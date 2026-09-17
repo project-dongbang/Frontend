@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { BellIcon, CalendarIcon, CheckIcon, HomeIcon, MenuIcon, SettingsIcon, UsersIcon, WalletIcon } from '../icons'
 import { MyPageModals } from './MyPageModals'
 import { HelpGuideModal } from './HelpGuideModal'
@@ -29,7 +30,7 @@ const icons = {
 }
 
 const categoryMenus = [
-  { title: '동아리', items: [{ label: '내 동아리', path: '/clubs' }, { label: '멤버 관리', path: '/members' }, { label: '동아리 설정', path: '/clubs/dlog/settings' }, { label: '초대 링크', path: '/clubs/join' }] },
+  { title: '동아리', items: [{ label: '내 동아리', path: '/clubs' }, { label: '멤버 관리', path: '/members' }, { label: '동아리 설정', path: '/clubs/dlog/settings' }, { label: '초대 링크', path: '/members?dialog=invite' }] },
   { title: '활동', items: [{ label: '행사 관리', path: '/events' }, { label: '출석 관리', path: '/attendance' }] },
   { title: '회비', items: [{ label: '회비 현황', path: '/fees' }, { label: '회비 관리', path: '/fees' }] },
   { title: '일정', items: [{ label: '캘린더', path: '/calendar' }, { label: '일정 관리', path: '/calendar' }] },
@@ -42,6 +43,9 @@ const initialNotifications: NotificationItem[] = [
 ]
 
 export function AppLayout({ children, navItems, activeNav, onNavChange, onOrganizationClick, onSettingsClick, settingsActive = false, showSettings = navItems.length === 5, organizationName, userName }: AppLayoutProps) {
+  const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const isMember = params.get('role') === 'member'
   const [menuOpen, setMenuOpen] = useState(false)
   const [categoryMenu, setCategoryMenu] = useState<{ index: number; left: number } | null>(null)
   const [myPageMode, setMyPageMode] = useState<'profile' | 'activity' | null>(null)
@@ -91,7 +95,12 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
         </nav>
         {categoryMenu && <div key={categoryMenu.index} className="category-nav-menu" style={{ left: categoryMenu.left }} role="menu" aria-label={`${categoryMenus[categoryMenu.index].title} 메뉴`}>
           <strong>{categoryMenus[categoryMenu.index].title}</strong>
-          {categoryMenus[categoryMenu.index].items.map((item) => <button key={item.label} type="button" role="menuitem" onClick={() => window.location.assign(item.path)}>{item.label}</button>)}
+          {categoryMenus[categoryMenu.index].items.filter((item) => !isMember || !['멤버 관리', '초대 링크', '동아리 설정'].includes(item.label)).map((item) => <button key={item.label} type="button" role="menuitem" onClick={() => {
+            setCategoryMenu(null)
+            const target = new URL(item.path, window.location.origin)
+            if (isMember) target.searchParams.set('role', 'member')
+            navigate(target.pathname + target.search)
+          }}>{item.label}</button>)}
         </div>}
         <div className="topbar-actions" onClick={(event) => { if ((event.target as HTMLElement).closest('.organization-switcher')) handleOrganizationClick() }}>
           <button type="button" className="organization-switcher"><b>D</b><span>{organizationName}</span><i aria-hidden="true">⌄</i></button>

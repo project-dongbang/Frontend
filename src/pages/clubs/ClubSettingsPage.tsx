@@ -53,10 +53,10 @@ export function ClubSettingsPage() {
                 <li><b>총무·운영진</b><span>멤버 · 일정 · 출석 · 회비 관리</span></li>
                 <li><b>일반 회원</b><span>행사 신청 · 출석 · 회비 조회</span></li>
               </ul>
-              <div className="club-settings-card-action"><Button variant="secondary" type="button">멤버별 역할 관리</Button></div>
+              <div className="club-settings-card-action"><Button variant="secondary" type="button" onClick={() => navigate('/members')}>멤버별 역할 관리</Button></div>
             </Card>
             <Card title="함께할 멤버 초대" description="초대 링크로 우리 동아리의 멤버를 모아보세요.">
-              <div className="club-invite-action"><Button type="button">초대 링크 만들기</Button></div>
+              <div className="club-invite-action"><Button type="button" onClick={() => navigate('/members?dialog=invite')}>초대 링크 만들기</Button></div>
             </Card>
             <Card className="club-danger-card" title="위험 영역" description="대표 권한 이외에는 탈퇴할 수 있어요.">
               <div className="club-danger-actions">

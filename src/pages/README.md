@@ -7,7 +7,7 @@ Figma 스토리보드의 화면 코드를 기준으로 페이지를 도메인별
 | `auth` | LGN001 로그인, SGN001 회원가입 추가 정보 | `/login`, `/signup` |
 | `club` | CLB001~004 동아리 선택·생성·참여·설정 | `/clubs`, `/clubs/new`, `/clubs/join`, `/clubs/:clubId/settings` |
 | `dashboard` | DSH001 운영진, DSH002 일반 회원 대시보드 | `/dashboard` |
-| `members` | MEM001~003 목록·초대·수정 | `/members` |
+| `members` | MEM001~004 목록·초대·수정·등록 | `/members` |
 | `schedule` | CAL001~002 캘린더·일정, EVT001~004 행사 | `/calendar`, `/events` |
 | `attendance` | ATT001~003 QR 출석·상태 수정·내 출석 | `/attendance` |
 | `fees` | FEE001~005 회비 현황·장부·사용내역·수납 | `/fees` |
