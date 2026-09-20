@@ -106,3 +106,58 @@ export const attendanceMembers: AttendanceMember[] = names.map(
     }
   },
 )
+
+export type MemberAttendanceStatus =
+  | 'present'
+  | 'late'
+  | 'absent'
+  | 'scheduled'
+
+export type MemberAttendanceItem = {
+  id: number
+  title: string
+  date: string
+  status: MemberAttendanceStatus
+  checkInTime: string
+}
+
+export const memberAttendanceItems: MemberAttendanceItem[] = [
+  {
+    id: 1,
+    title: '9월 정기 모임',
+    date: '2026.09.12 19:00',
+    status: 'present',
+    checkInTime: '18:57',
+  },
+  {
+    id: 2,
+    title: '개강 총회',
+    date: '2026.09.05 18:30',
+    status: 'late',
+    checkInTime: '18:42',
+  },
+  {
+    id: 3,
+    title: '여름 MT',
+    date: '2026.08.22 10:00',
+    status: 'absent',
+    checkInTime: '-',
+  },
+  {
+    id: 4,
+    title: '9월 네트워킹 데이',
+    date: '2026.09.26 14:00',
+    status: 'scheduled',
+    checkInTime: '-',
+  },
+]
+
+export const memberAttendanceStatusLabel: Record<
+  MemberAttendanceStatus,
+  string
+> = {
+  present: '출석',
+  late: '지각',
+  absent: '결석',
+  scheduled: '예정',
+}
