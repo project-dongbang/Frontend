@@ -1,16 +1,18 @@
 import type { CalendarItem } from './scheduleMock'
 
-type ScheduleDeleteModalProps = {
+type ScheduleEarlyCloseModalProps = {
   open: boolean
   item: CalendarItem | null
   onClose: () => void
+  onConfirm: () => void
 }
 
-export function ScheduleDeleteModal({
+export function ScheduleEarlyCloseModal({
   open,
   item,
   onClose,
-}: ScheduleDeleteModalProps) {
+  onConfirm,
+}: ScheduleEarlyCloseModalProps) {
   if (!open || !item) return null
 
   return (
@@ -22,35 +24,35 @@ export function ScheduleDeleteModal({
         className="schedule-delete-dialog"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="schedule-delete-title"
+        aria-labelledby="schedule-early-close-title"
         onMouseDown={(event) =>
           event.stopPropagation()
         }
       >
         <div className="schedule-delete-content">
           <span className="schedule-delete-label">
-            일정 삭제
+            일정 조기 마감
           </span>
 
-          <h2 id="schedule-delete-title">
-            일정을 삭제할까요?
+          <h2 id="schedule-early-close-title">
+            일정을 조기 마감할까요?
           </h2>
 
           <p className="schedule-delete-subtitle">
-            삭제한 일정은 다시 복구할 수 없습니다.
+            조기 마감 후에는 더 이상 참가 신청을 받을 수 없습니다.
           </p>
 
           <div className="schedule-delete-warning">
             <strong>{item.title}</strong>
 
             <p>
-              해당 일정을 삭제하면 참가 신청 정보도
-              함께 삭제됩니다.
+              현재 진행 중인 참가 신청을 종료하고
+              일정을 조기 마감합니다.
             </p>
           </div>
 
           <p className="schedule-delete-notice">
-            정말 삭제하시겠습니까?
+            조기 마감 후에는 참가 신청을 다시 받을 수 없습니다.
           </p>
         </div>
 
@@ -65,13 +67,10 @@ export function ScheduleDeleteModal({
 
           <button
             type="button"
-            className="schedule-delete-confirm"
-            onClick={() => {
-              // TODO: 일정 삭제 API 연결
-              onClose()
-            }}
+            className="schedule-early-close-confirm"
+            onClick={onConfirm}
           >
-            일정 삭제
+            조기 마감
           </button>
         </div>
       </div>

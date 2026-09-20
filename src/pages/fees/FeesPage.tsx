@@ -1,5 +1,6 @@
 import { useState } from 'react'
-
+import { useSearchParams } from 'react-router-dom'
+import { MemberFeesPage } from './MemberFeesPage'
 import { DashboardShell } from '../dashboard/DashboardShell'
 import { ExpenseCreateModal } from './components/ExpenseCreateModal'
 import { FeeItemCreateModal } from './components/FeeItemCreateModal'
@@ -22,6 +23,8 @@ import {
 import './fees.css'
 
 export function FeesPage() {
+  const [searchParams] = useSearchParams()
+const role = searchParams.get('role')
   const [activeTab, setActiveTab] =
     useState<FeesTab>('ledger')
 
@@ -91,6 +94,9 @@ export function FeesPage() {
       collectionId,
     })
   }
+  if (role === 'member') {
+  return <MemberFeesPage />
+}
 
   return (
     <DashboardShell role="admin">

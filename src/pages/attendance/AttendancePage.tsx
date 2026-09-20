@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { MemberAttendancePage } from './MemberAttendancePage'
 import { DashboardShell } from '../dashboard/DashboardShell'
 import { AttendanceQrPanel } from './AttendanceQrPanel'
 import { AttendanceRoster } from './AttendanceRoster'
@@ -12,6 +14,8 @@ import './attendance.css'
 export type AttendanceFilter = AttendanceStatus | 'all'
 
 export function AttendancePage() {
+  const [searchParams] = useSearchParams()
+  const role = searchParams.get('role')
   const [selectedEventId, setSelectedEventId] = useState(
     attendanceEvents[0]?.id ?? '',
   )
@@ -77,6 +81,9 @@ const handleDownload = () => {
 
     setRefreshText(`최근 갱신 ${now}`)
   }
+  if (role === 'member') {
+  return <MemberAttendancePage />
+}
 
   return (
     <DashboardShell role="admin">
