@@ -1,0 +1,7 @@
+.help-guide-modal { width: min(100%, 620px); }
+.help-guide-modal .modal-body { padding-block: 24px; }
+.help-guide-list { display: grid; gap: 24px; }
+.help-guide-list section { display: grid; gap: 8px; }
+.help-guide-list h3 { margin: 0; color: #17212b; font-size: 16px; letter-spacing: -.25px; }
+.help-guide-list p { margin: 0; color: #66717e; font-size: 14px; line-height: 1.7; }
+@media (max-width: 520px) { .help-guide-list { gap: 20px; }.help-guide-list p { font-size: 13px; } }
