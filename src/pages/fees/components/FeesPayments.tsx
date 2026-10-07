@@ -14,6 +14,7 @@ type FeesPaymentsProps = {
     status: FeePaymentStatus,
   ) => void
   onExport: (collectionId: string) => void
+  onEditCollection: (collection: FeeCollection) => void
 }
 
 type PaymentFilter = 'all' | FeePaymentStatus
@@ -26,6 +27,7 @@ export function FeesPayments({
   members,
   onPaymentStatusChange,
   onExport,
+  onEditCollection,
 }: FeesPaymentsProps) {
   const [selectedCollectionId, setSelectedCollectionId] =
     useState(collections[0]?.id ?? '')
@@ -33,8 +35,14 @@ export function FeesPayments({
   const [filter, setFilter] =
     useState<PaymentFilter>('all')
 
-  const selectedCollection = collections.find(
+  const validCollectionId = collections.some(
     (collection) => collection.id === selectedCollectionId,
+  )
+    ? selectedCollectionId
+    : (collections[0]?.id ?? '')
+
+  const selectedCollection = collections.find(
+    (collection) => collection.id === validCollectionId,
   )
 
   const filteredMembers = useMemo(() => {
@@ -76,7 +84,7 @@ export function FeesPayments({
         <select
           className="filter-select"
           aria-label="회비 선택"
-          value={selectedCollectionId}
+          value={validCollectionId}
           onChange={(event) =>
             setSelectedCollectionId(event.target.value)
           }
@@ -100,6 +108,16 @@ export function FeesPayments({
           <option value="unpaid">미납</option>
           <option value="paid">납부 완료</option>
         </select>
+
+        <button
+          type="button"
+          className="fees-secondary-btn"
+          onClick={() =>
+            onEditCollection(selectedCollection)
+          }
+        >
+          항목 수정
+        </button>
 
         <button
           type="button"
