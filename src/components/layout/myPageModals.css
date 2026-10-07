@@ -1,3 +1,5 @@
+.app-shell:has(.my-page-modal) { position: relative; }
+.modal-backdrop:has(.my-page-modal) { position: absolute; }
 .my-page-modal { width: min(100%, 620px); }
 .my-page-modal .modal-body { gap: 24px; }
 .profile-summary { display: flex; align-items: center; gap: 16px; padding-bottom: 22px; border-bottom: 1px solid #edf0f2; }
