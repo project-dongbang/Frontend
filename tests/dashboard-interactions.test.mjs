@@ -38,6 +38,17 @@ test('the admin dashboard renders all four navigation actions', () => {
   assert.equal((html.match(/전체 보기 →/g) ?? []).length, 2)
 })
 
+test('the sidebar is the only global navigation and exposes mobile controls', () => {
+  const html = renderPath('/dashboard')
+
+  assert.doesNotMatch(html, /global-nav|동아리⌄|활동⌄|회비⌄|일정⌄/)
+  assert.match(html, /aria-label="주 메뉴"/)
+  assert.match(html, /aria-label="서비스 메뉴"/)
+  assert.match(html, /aria-controls="primary-navigation"/)
+  assert.match(html, /aria-expanded="false"/)
+  assert.match(html, /class="sidebar-organization"/)
+})
+
 test('dashboard creation deep links open their target dialogs', () => {
   const fees = renderPath('/fees?dialog=fee-item-create')
   const schedule = renderPath('/calendar?dialog=schedule-create')
