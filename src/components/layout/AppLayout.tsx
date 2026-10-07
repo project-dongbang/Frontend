@@ -68,7 +68,7 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
       return
     }
 
-    window.location.assign('/clubs')
+    navigate(isMember ? '/clubs?role=member' : '/clubs')
   }
   const handleSettingsClick = () => {
     if (onSettingsClick) {
@@ -122,8 +122,8 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
             navigate(target.pathname + target.search)
           }}>{item.label}</button>)}
         </div>}
-        <div className="topbar-actions" onClick={(event) => { if ((event.target as HTMLElement).closest('.organization-switcher')) handleOrganizationClick() }}>
-          <button type="button" className="organization-switcher"><b>D</b><span>{organizationName}</span><i aria-hidden="true">⌄</i></button>
+        <div className="topbar-actions">
+          <button type="button" className="organization-switcher" onClick={handleOrganizationClick}><b>D</b><span>{organizationName}</span><i aria-hidden="true">⌄</i></button>
           <button type="button" className="icon-button notification-button" aria-label={`읽지 않은 알림 ${unreadCount}개`} onClick={() => setNotificationOpen(true)}><BellIcon />{unreadCount > 0 && <i>{unreadCount}</i>}</button>
           <button type="button" className="avatar" aria-label="내 정보" onClick={() => setMyPageMode('profile')}>{displayName.slice(0, 1)}</button>
           <button type="button" className="mobile-menu" aria-label="메뉴" onClick={() => setMenuOpen(!menuOpen)}><MenuIcon /></button>
