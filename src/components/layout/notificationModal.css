@@ -1,3 +1,5 @@
+.app-shell:has(.notification-modal) { position: relative; }
+.modal-backdrop:has(.notification-modal) { position: absolute; }
 .notification-modal { width: min(100%, 620px); }
 .notification-modal .modal-body { gap: 20px; padding-block: 24px; }
 .notification-intro { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
