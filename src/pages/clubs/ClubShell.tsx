@@ -13,15 +13,17 @@ export function ClubShell({ children, member = false }: { children: ReactNode; m
   const [activeNav, setActiveNav] = useState('동아리 관리')
 
   return (
-    <AppLayout
-      activeNav={activeNav}
-      onNavChange={setActiveNav}
-      settingsActive
-      navItems={navItems}
-      organizationName="D.Log 개발동아리"
-      userName={member ? '남은우' : '김동방'}
-    >
-      {children}
-    </AppLayout>
+    <div className="club-app-shell">
+      <AppLayout
+        activeNav={activeNav}
+        onNavChange={setActiveNav}
+        settingsActive
+        navItems={navItems}
+        organizationName="D.Log 개발동아리"
+        userName={member ? '남은우' : '김동방'}
+      >
+        {children}
+      </AppLayout>
+    </div>
   )
 }
