@@ -62,7 +62,7 @@ export function MembersPage() {
   return <DashboardShell role={isMember ? 'member' : 'admin'}>
     <section className="members-page">
       <PageHeader eyebrow="MEMBERS" title="멤버 관리" description="동아리 소속, 역할, 활동 상태를 한눈에 관리해요."
-        action={!isMember && <Button className="member-invite-button" onClick={openInvite}><img src={addIcon} alt="" width={17} height={17} />멤버 초대</Button>} />
+        action={!isMember && <Button className="page-header-action member-invite-button" onClick={openInvite}><img src={addIcon} alt="" width={17} height={17} />멤버 초대</Button>} />
       {isMember ? <Card><EmptyState title="운영진만 이용할 수 있어요" description="멤버 조회와 관리는 동아리 운영진에게 문의해 주세요." /></Card> : <>
         <Card className="members-card" title={`전체 멤버 ${members.length}명`} description={`운영진 ${staffCount}명 · 검색 결과 ${visibleMembers.length}명`}
           action={<div className="members-toolbar">

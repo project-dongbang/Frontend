@@ -125,7 +125,7 @@ export function GalleryPage() {
         </div>
 
         {!isMember && (
-          <Button onClick={() => addFileInput.current?.click()}>
+          <Button className="page-header-action" onClick={() => addFileInput.current?.click()}>
             사진 추가
           </Button>
         )}

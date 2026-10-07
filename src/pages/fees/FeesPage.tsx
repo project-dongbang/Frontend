@@ -186,7 +186,7 @@ export function FeesPage() {
           <div className="fees-page-actions">
             <button
               type="button"
-              className="fees-secondary-btn"
+              className="page-header-action fees-secondary-btn"
               onClick={() => {
                 setEditingFeeCollection(null)
                 setFeeItemModalOpen(true)
@@ -197,7 +197,7 @@ export function FeesPage() {
 
             <button
               type="button"
-              className="fees-secondary-btn"
+              className="page-header-action fees-secondary-btn"
               onClick={() =>
                 setIncomeModalOpen(true)
               }
@@ -207,7 +207,7 @@ export function FeesPage() {
 
             <button
               type="button"
-              className="fees-primary-btn"
+              className="page-header-action fees-primary-btn"
               onClick={() =>
                 setExpenseModalOpen(true)
               }
