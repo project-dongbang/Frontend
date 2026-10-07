@@ -48,7 +48,11 @@ export function GalleryDetailModal({
           role="img"
           aria-label={photo.title}
         >
-          <GalleryArtwork tone={photo.tone} />
+          <GalleryArtwork
+            tone={photo.tone}
+            imageUrl={photo.imageUrl}
+            alt=""
+          />
         </div>
 
         <figcaption>

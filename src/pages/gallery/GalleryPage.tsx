@@ -1,9 +1,11 @@
 import { useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Button, Input, Modal } from '../../components/common'
+import { Button } from '../../components/common'
 import { DashboardShell } from '../dashboard/DashboardShell'
 import { GalleryArtwork } from './GalleryArtwork'
+import { GalleryDeleteModal } from './GalleryDeleteModal'
 import { GalleryDetailModal } from './GalleryDetailModal'
+import { GalleryPhotoFormModal } from './GalleryPhotoFormModal'
 import { galleryMock, type GalleryPhoto, type GalleryTone } from './galleryMock'
 import './gallery.css'
 
@@ -19,21 +21,90 @@ export function GalleryPage() {
   const [dialog, setDialog] = useState<Dialog>(null)
   const [title, setTitle] = useState('')
   const [fileName, setFileName] = useState('')
-  const fileInput = useRef<HTMLInputElement>(null)
+  const [pendingImageUrl, setPendingImageUrl] =
+    useState('')
+  const addFileInput = useRef<HTMLInputElement>(null)
 
-  const close = () => { setDialog(null); setSelected(null); setTitle(''); setFileName('') }
+  const resetForm = () => {
+    setTitle('')
+    setFileName('')
+    setPendingImageUrl('')
+  }
+  const close = () => {
+    setDialog(null)
+    setSelected(null)
+    resetForm()
+  }
   const openDetail = (photo: GalleryPhoto) => { setSelected(photo); setDialog('detail') }
-  const openEdit = () => { if (!selected) return; setTitle(selected.title); setDialog('edit') }
+  const openEdit = () => {
+    if (!selected) return
+    setTitle(selected.title)
+    setFileName('')
+    setPendingImageUrl('')
+    setDialog('edit')
+  }
+  const closeEditor = () => {
+    resetForm()
+    setDialog(selected ? 'detail' : null)
+  }
+
+  const readImage = (
+    file: File,
+    onLoad: (imageUrl: string) => void,
+  ) => {
+    const reader = new FileReader()
+    reader.addEventListener('load', () => {
+      if (typeof reader.result === 'string') {
+        onLoad(reader.result)
+      }
+    })
+    reader.readAsDataURL(file)
+  }
+
+  const selectAddPhoto = (file: File | null) => {
+    if (!file) return
+    setFileName(file.name)
+    readImage(file, (imageUrl) => {
+      setPendingImageUrl(imageUrl)
+      setTitle('')
+      setDialog('add')
+    })
+  }
+
+  const selectReplacementPhoto = (file: File | null) => {
+    if (!file) {
+      setFileName('')
+      setPendingImageUrl('')
+      return
+    }
+    setFileName(file.name)
+    readImage(file, setPendingImageUrl)
+  }
+
   const addPhoto = () => {
     const trimmedTitle = title.trim()
     if (!trimmedTitle) return
-    setPhotos((current) => [...current, { id: crypto.randomUUID(), title: trimmedTitle, createdAt: '2026.09.14', tone: nextTone }])
+    setPhotos((current) => [...current, {
+      id: crypto.randomUUID(),
+      title: trimmedTitle,
+      createdAt: '2026.09.14',
+      tone: nextTone,
+      imageUrl: pendingImageUrl || undefined,
+    }])
     close()
   }
   const saveEdit = () => {
     if (!selected || !title.trim()) return
-    setPhotos((current) => current.map((photo) => photo.id === selected.id ? { ...photo, title: title.trim() } : photo))
-    setSelected((current) => current ? { ...current, title: title.trim() } : current)
+    const updatedPhoto = {
+      ...selected,
+      title: title.trim(),
+      imageUrl: pendingImageUrl || selected.imageUrl,
+    }
+    setPhotos((current) => current.map((photo) =>
+      photo.id === selected.id ? updatedPhoto : photo,
+    ))
+    setSelected(updatedPhoto)
+    resetForm()
     setDialog('detail')
   }
   const deletePhoto = () => {
@@ -54,7 +125,7 @@ export function GalleryPage() {
         </div>
 
         {!isMember && (
-          <Button onClick={() => setDialog('add')}>
+          <Button onClick={() => addFileInput.current?.click()}>
             사진 추가
           </Button>
         )}
@@ -71,7 +142,11 @@ export function GalleryPage() {
                 onClick={() => openDetail(photo)}
                 key={photo.id}
               >
-                <GalleryArtwork tone={photo.tone} />
+                <GalleryArtwork
+                  tone={photo.tone}
+                  imageUrl={photo.imageUrl}
+                  alt=""
+                />
                 <strong>{photo.title}</strong>
               </button>
             ))
@@ -96,9 +171,39 @@ export function GalleryPage() {
       onEdit={openEdit}
       onDelete={() => setDialog('delete')}
     />
-    <Modal open={dialog === 'add'} title="사진 설명" onClose={close} confirmLabel="사진 추가" onConfirm={addPhoto}><Input label="사진 제목" placeholder="예: 9월 개강 총회" value={title} onChange={(event) => setTitle(event.target.value)} autoFocus required /><button type="button" className="gallery-file-select" onClick={() => fileInput.current?.click()}>{fileName || '사진 파일 선택'}<span>JPG · PNG · WEBP</span></button></Modal>
-    <Modal open={dialog === 'edit'} title="사진 수정" onClose={() => setDialog('detail')} confirmLabel="저장" onConfirm={saveEdit}><Input label="사진 제목" value={title} onChange={(event) => setTitle(event.target.value)} autoFocus required /><button type="button" className="gallery-file-select" onClick={() => fileInput.current?.click()}>사진 교체<span>{fileName || '새 사진을 선택하지 않으면 제목만 변경됩니다.'}</span></button></Modal>
-    <Modal open={dialog === 'delete' && selected !== null} title="이 사진을 삭제할까요?" description="사진첩과 연결된 활동 화면에서 이 사진이 더 이상 표시되지 않습니다." tone="danger" onClose={() => setDialog('detail')} confirmLabel="사진 삭제" onConfirm={deletePhoto}><div className="gallery-delete-summary"><strong>{selected?.title}</strong><span>등록일 {selected?.createdAt} · 운영진 등록</span></div><p className="gallery-delete-warning">삭제한 사진은 복구할 수 없습니다.</p></Modal>
-    <input ref={fileInput} className="gallery-file-input" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => setFileName(event.target.files?.[0]?.name ?? '')} />
+    <GalleryPhotoFormModal
+      mode="add"
+      open={dialog === 'add'}
+      title={title}
+      onTitleChange={setTitle}
+      onClose={close}
+      onSubmit={addPhoto}
+    />
+    <GalleryPhotoFormModal
+      mode="edit"
+      open={dialog === 'edit'}
+      title={title}
+      fileName={fileName}
+      onTitleChange={setTitle}
+      onFileChange={selectReplacementPhoto}
+      onClose={closeEditor}
+      onSubmit={saveEdit}
+    />
+    <GalleryDeleteModal
+      open={dialog === 'delete'}
+      photo={selected}
+      onClose={() => setDialog('detail')}
+      onConfirm={deletePhoto}
+    />
+    <input
+      ref={addFileInput}
+      className="gallery-file-input"
+      type="file"
+      accept="image/png,image/jpeg,image/webp"
+      aria-label="추가할 사진 선택"
+      onChange={(event) =>
+        selectAddPhoto(event.target.files?.[0] ?? null)
+      }
+    />
   </DashboardShell>
 }
