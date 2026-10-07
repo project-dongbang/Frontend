@@ -42,8 +42,48 @@ export function GalleryPage() {
 
   return <DashboardShell role={isMember ? 'member' : 'admin'}>
     <section className="gallery-page">
-      <header className="gallery-header"><div><span className="gallery-kicker">CLUB GALLERY</span><h1>사진첩</h1><p>동아리 활동의 순간을 함께 기록해요.</p></div>{!isMember && <Button onClick={() => setDialog('add')}>사진 추가</Button>}</header>
-      <section className="gallery-card" aria-label="사진 목록"><div className="gallery-grid">{photos.map((photo) => <button type="button" className={`gallery-thumbnail tone-${photo.tone}`} onClick={() => openDetail(photo)} key={photo.id}><GalleryArtwork tone={photo.tone} /><strong>{photo.title}</strong></button>)}</div><p>썸네일을 누르면 사진을 크게 볼 수 있어요.</p></section>
+      <header className="gallery-header">
+        <div>
+          <span className="gallery-kicker">
+            CLUB GALLERY
+          </span>
+          <h1>사진첩</h1>
+          <p>동아리 활동의 순간을 함께 기록해요.</p>
+        </div>
+
+        {!isMember && (
+          <Button onClick={() => setDialog('add')}>
+            사진 추가
+          </Button>
+        )}
+      </header>
+
+      <section className="gallery-card" aria-label="사진 목록">
+        <div className="gallery-grid">
+          {photos.length > 0 ? (
+            photos.map((photo) => (
+              <button
+                type="button"
+                className={`gallery-thumbnail tone-${photo.tone}`}
+                aria-label={`${photo.title} 사진 상세 보기`}
+                onClick={() => openDetail(photo)}
+                key={photo.id}
+              >
+                <GalleryArtwork tone={photo.tone} />
+                <strong>{photo.title}</strong>
+              </button>
+            ))
+          ) : (
+            <div className="gallery-empty">
+              <strong>아직 등록된 사진이 없어요.</strong>
+              <span>
+                동아리 활동의 첫 번째 순간을 기록해 보세요.
+              </span>
+            </div>
+          )}
+        </div>
+        <p>썸네일을 누르면 사진을 크게 볼 수 있어요.</p>
+      </section>
     </section>
 
     <Modal open={dialog === 'detail' && selected !== null} title="사진 상세" onClose={close}><PhotoDetail photo={selected} />{!isMember && <div className="gallery-detail-actions"><Button variant="secondary" onClick={openEdit}>수정</Button><Button onClick={() => setDialog('delete')}>삭제</Button></div>}</Modal>

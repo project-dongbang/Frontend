@@ -1,6 +1,10 @@
 import { useState, type ReactNode } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import { BellIcon, CalendarIcon, CheckIcon, HomeIcon, MenuIcon, SettingsIcon, UsersIcon, WalletIcon } from '../icons'
+import {
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from 'react-router-dom'
+import { BellIcon, CalendarIcon, CheckIcon, GalleryIcon, HomeIcon, MenuIcon, SettingsIcon, UsersIcon, WalletIcon } from '../icons'
 import { MyPageModals } from './MyPageModals'
 import { HelpGuideModal } from './HelpGuideModal'
 import { NotificationModal, type NotificationItem } from './NotificationModal'
@@ -27,6 +31,7 @@ const icons = {
   calendar: CalendarIcon,
   check: CheckIcon,
   wallet: WalletIcon,
+  gallery: GalleryIcon,
 }
 
 const categoryMenus = [
@@ -42,8 +47,9 @@ const initialNotifications: NotificationItem[] = [
   { id: 'attendance', title: '개강 총회 출석 명단을 확인할 수 있어요.', date: '9월 1일 · 새 알림', path: '/attendance', unread: true },
 ]
 
-export function AppLayout({ children, navItems, activeNav, onNavChange, onOrganizationClick, onSettingsClick, settingsActive = false, showSettings = navItems.length === 5, organizationName, userName }: AppLayoutProps) {
+export function AppLayout({ children, navItems, activeNav, onNavChange, onOrganizationClick, onSettingsClick, settingsActive = false, showSettings = navItems.length === 5, organizationName, userName, notificationCount = initialNotifications.length }: AppLayoutProps) {
   const navigate = useNavigate()
+  const { pathname } = useLocation()
   const [params] = useSearchParams()
   const isMember = params.get('role') === 'member'
   const [menuOpen, setMenuOpen] = useState(false)
@@ -51,7 +57,9 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
   const [myPageMode, setMyPageMode] = useState<'profile' | 'activity' | null>(null)
   const [helpGuideOpen, setHelpGuideOpen] = useState(false)
   const [notificationOpen, setNotificationOpen] = useState(false)
-  const [notifications, setNotifications] = useState(initialNotifications)
+  const [notifications, setNotifications] = useState(() =>
+    initialNotifications.slice(0, notificationCount),
+  )
   const [displayName, setDisplayName] = useState(userName)
   const unreadCount = notifications.filter((notification) => notification.unread).length
   const handleOrganizationClick = () => {
@@ -91,7 +99,19 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
           <button type="button">활동⌄</button>
           <button type="button">회비⌄</button>
           <button type="button">일정⌄</button>
-          <button type="button" onClick={() => window.location.assign('/gallery')}>사진첩</button>
+          <button
+            type="button"
+            aria-current={pathname === '/gallery' ? 'page' : undefined}
+            onClick={() =>
+              navigate(
+                isMember
+                  ? '/gallery?role=member'
+                  : '/gallery',
+              )
+            }
+          >
+            사진첩
+          </button>
         </nav>
         {categoryMenu && <div key={categoryMenu.index} className="category-nav-menu" style={{ left: categoryMenu.left }} role="menu" aria-label={`${categoryMenus[categoryMenu.index].title} 메뉴`}>
           <strong>{categoryMenus[categoryMenu.index].title}</strong>
