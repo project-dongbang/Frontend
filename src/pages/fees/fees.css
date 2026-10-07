@@ -2418,6 +2418,12 @@
   font-size: 13px;
 }
 
+.fee-account-fields {
+  display: grid;
+  gap: 14px;
+  padding-top: 2px;
+}
+
 /* category colors used by categoryPalette */
 .fee-category-dot.green {
   background: #16876a;
@@ -2495,6 +2501,81 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  gap: 8px;
+  flex: none;
+}
+
+.fee-delete-button,
+.fee-delete-confirm-button {
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.fee-delete-button {
+  border: 1px solid #efc8c8;
+  color: var(--color-status-danger, #d94c4c);
+  background: #fff;
+}
+
+.fee-delete-button:hover {
+  border-color: var(--color-status-danger, #d94c4c);
+  background: #fff7f7;
+}
+
+.fee-delete-confirm-backdrop {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 20px;
+  background: rgba(23, 33, 43, 0.48);
+  backdrop-filter: blur(2px);
+}
+
+.fee-delete-confirm {
+  width: min(420px, 100%);
+  box-sizing: border-box;
+  padding: 26px;
+  border: 1px solid var(--color-border-default, #e3e8ec);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(23, 33, 43, 0.22);
+}
+
+.fee-delete-confirm h2 {
+  margin: 8px 0 0;
+  color: var(--color-text-primary, #17212b);
+  font-size: 20px;
+}
+
+.fee-delete-confirm p {
+  margin: 12px 0 22px;
+  color: var(--color-text-secondary, #66717e);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.fee-delete-confirm > div {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.fee-delete-confirm-button {
+  border: 1px solid var(--color-status-danger, #d94c4c);
+  color: #fff;
+  background: var(--color-status-danger, #d94c4c);
+}
+
+.fee-delete-confirm-button:hover {
+  filter: brightness(0.94);
 }
 
 .fee-create-footer .fees-primary-btn,
@@ -2575,7 +2656,12 @@
 
   .fee-create-footer {
     min-height: 64px;
-    padding: 0 18px;
+    justify-content: flex-end;
+    padding: 12px 18px;
+  }
+
+  .fee-create-footer small {
+    display: none;
   }
 
   .fee-category-card > header > div:first-child {

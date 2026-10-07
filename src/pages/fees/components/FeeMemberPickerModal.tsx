@@ -1,13 +1,7 @@
 import { useMemo, useState } from 'react'
 
 import { feePaymentMembers } from '../feesMock'
-
-type FeeCategory = {
-  id: string
-  name: string
-  amount: number
-  memberIds: string[]
-}
+import type { FeeCategory } from '../feesMock'
 
 type MemberSort = 'name' | 'joinedAt' | 'role'
 

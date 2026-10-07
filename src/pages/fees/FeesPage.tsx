@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { MemberFeesPage } from './MemberFeesPage'
 import { DashboardShell } from '../dashboard/DashboardShell'
 import { ExpenseCreateModal } from './components/ExpenseCreateModal'
-import { FeeItemCreateModal } from './components/FeeItemCreateModal'
+import { FeeItemModal } from './components/FeeItemModal'
 import { IncomeCreateModal } from './components/IncomeCreateModal'
 import { FeesLedger } from './components/FeesLedger'
 import { FeesPayments } from './components/FeesPayments'
@@ -18,18 +18,22 @@ import {
   feePaymentMembers,
   feesSummary,
   feesTransactions,
+  type FeeCollection,
+  type FeeCollectionDraft,
 } from './feesMock'
 
 import './fees.css'
 
 export function FeesPage() {
   const [searchParams] = useSearchParams()
-const role = searchParams.get('role')
+  const role = searchParams.get('role')
   const [activeTab, setActiveTab] =
     useState<FeesTab>('ledger')
 
   const [paymentMembers, setPaymentMembers] =
     useState(feePaymentMembers)
+  const [collections, setCollections] =
+    useState(feeCollections)
 
   const [paymentSummary, setPaymentSummary] = useState({
     feeItemId: 21,
@@ -41,10 +45,69 @@ const role = searchParams.get('role')
 
   const [feeItemModalOpen, setFeeItemModalOpen] =
     useState(false)
+  const [editingFeeCollection, setEditingFeeCollection] =
+    useState<FeeCollection | null>(null)
   const [incomeModalOpen, setIncomeModalOpen] =
-  useState(false)
+    useState(false)
   const [expenseModalOpen, setExpenseModalOpen] =
-  useState(false)
+    useState(false)
+
+  const closeFeeItemModal = () => {
+    setFeeItemModalOpen(false)
+    setEditingFeeCollection(null)
+  }
+
+  const handleFeeItemSave = (
+    draft: FeeCollectionDraft,
+  ) => {
+    if (editingFeeCollection) {
+      // TODO: 납부 항목 수정 API 연결
+      console.log('납부 항목 수정', {
+        id: editingFeeCollection.id,
+        ...draft,
+      })
+
+      setCollections((current) =>
+        current.map((collection) =>
+          collection.id === editingFeeCollection.id
+            ? { ...draft, id: collection.id }
+            : collection,
+        ),
+      )
+    } else {
+      const newCollection = {
+        ...draft,
+        id: `collection-${Date.now()}`,
+      }
+
+      // TODO: 납부 항목 등록 API 연결
+      console.log('납부 항목 등록', newCollection)
+      setCollections((current) => [
+        newCollection,
+        ...current,
+      ])
+    }
+
+    closeFeeItemModal()
+  }
+
+  const handleFeeItemDelete = () => {
+    if (!editingFeeCollection) {
+      return
+    }
+
+    // TODO: 납부 항목 삭제 API 연결
+    console.log('납부 항목 삭제', {
+      id: editingFeeCollection.id,
+    })
+    setCollections((current) =>
+      current.filter(
+        (collection) =>
+          collection.id !== editingFeeCollection.id,
+      ),
+    )
+    closeFeeItemModal()
+  }
 
   const handlePaymentStatusChange = (
     collectionId: string,
@@ -95,8 +158,8 @@ const role = searchParams.get('role')
     })
   }
   if (role === 'member') {
-  return <MemberFeesPage />
-}
+    return <MemberFeesPage />
+  }
 
   return (
     <DashboardShell role="admin">
@@ -119,9 +182,10 @@ const role = searchParams.get('role')
             <button
               type="button"
               className="fees-secondary-btn"
-              onClick={() =>
+              onClick={() => {
+                setEditingFeeCollection(null)
                 setFeeItemModalOpen(true)
-              }
+              }}
             >
               납부 항목 등록
             </button>
@@ -169,37 +233,43 @@ const role = searchParams.get('role')
           />
         ) : (
           <FeesPayments
-            collections={feeCollections}
+            collections={collections}
             members={paymentMembers}
             onPaymentStatusChange={
               handlePaymentStatusChange
             }
             onExport={handlePaymentExport}
+            onEditCollection={(collection) => {
+              setEditingFeeCollection(collection)
+              setFeeItemModalOpen(true)
+            }}
           />
         )}
       </section>
 
       {feeItemModalOpen && (
-        <FeeItemCreateModal
-          onClose={() =>
-            setFeeItemModalOpen(false)
+        <FeeItemModal
+          key={editingFeeCollection?.id ?? 'create'}
+          collection={editingFeeCollection ?? undefined}
+          onClose={closeFeeItemModal}
+          onSave={handleFeeItemSave}
+          onDelete={
+            editingFeeCollection
+              ? handleFeeItemDelete
+              : undefined
           }
         />
       )}
       {incomeModalOpen && (
-  <IncomeCreateModal
-    onClose={() =>
-      setIncomeModalOpen(false)
-    }
-  />
-)}
-{expenseModalOpen && (
-  <ExpenseCreateModal
-    onClose={() =>
-      setExpenseModalOpen(false)
-    }
-  />
-)}
+        <IncomeCreateModal
+          onClose={() => setIncomeModalOpen(false)}
+        />
+      )}
+      {expenseModalOpen && (
+        <ExpenseCreateModal
+          onClose={() => setExpenseModalOpen(false)}
+        />
+      )}
     </DashboardShell>
   )
 }

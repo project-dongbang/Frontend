@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "test:auth": "node --experimental-strip-types --test tests/signup-render.test.mjs",
+    "test:fees": "node --experimental-strip-types --test tests/fee-item-render.test.mjs",
     "test:members": "node --experimental-strip-types --test tests/member-management.test.mjs tests/member-render.test.mjs"
   },
   "dependencies": {
