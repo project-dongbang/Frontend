@@ -10,6 +10,7 @@ const adminNavItems = [
   { label: '일정 · 행사', icon: 'calendar' },
   { label: '출석 관리', icon: 'check' },
   { label: '회비 관리', icon: 'wallet' },
+  { label: '사진첩', icon: 'gallery' },
 ]
 
 const memberNavItems = [
@@ -17,6 +18,7 @@ const memberNavItems = [
   { label: '일정 · 행사', icon: 'calendar' },
   { label: '내 출석', icon: 'check' },
   { label: '회비', icon: 'wallet' },
+  { label: '사진첩', icon: 'gallery' },
 ]
 
 export function DashboardShell({
@@ -37,6 +39,7 @@ export function DashboardShell({
     '내 출석': PATHS.attendance,
     '회비 관리': PATHS.fees,
     '회비': PATHS.fees,
+    '사진첩': PATHS.gallery,
   }
   const activeNav = (isAdmin ? adminNavItems : memberNavItems).find((item) => navPaths[item.label] === pathname)?.label ?? ''
   return (
@@ -50,6 +53,7 @@ export function DashboardShell({
       organizationName="D.Log 개발동아리"
       userName={isAdmin ? '김동방' : '남은우'}
       notificationCount={isAdmin ? 3 : 1}
+      showSettings={isAdmin}
     >
       {children}
     </AppLayout>
