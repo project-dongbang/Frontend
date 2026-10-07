@@ -23,3 +23,4 @@
 .activity-list article strong { color: #273440; font-size: 14px; }
 .activity-list article span { color: #77838d; font-size: 12px; }
 @media (max-width: 520px) { .profile-form-grid, .activity-summary { grid-template-columns: 1fr; }.my-page-modal-actions { flex-wrap: wrap; }.my-page-modal-actions .logout-button { width: 100%; margin: 3px 0 0; text-align: right; } }
+@media (max-width: 760px) { .modal-backdrop:has(.my-page-modal) { position: fixed; } }

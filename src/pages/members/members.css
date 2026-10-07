@@ -56,3 +56,4 @@
 @media (max-width: 1000px) { .members-card .card-header { align-items: stretch; flex-direction: column; padding-block: 16px; gap: 12px; }.members-search { flex: 1; width: auto; } }
 @media (max-width: 760px) { .content:has(.members-page) { width: 100%; }.members-page .page-header h1 { font-size: 25px; }.members-page .page-header p { line-height: 1.6; }.members-card .card-header { padding-inline: 16px; }.members-toolbar { flex-wrap: wrap; }.members-search { flex-basis: 100%; }.members-table-scroll { max-height: 440px; }.member-modal .modal-body { padding: 20px; } }
 @media (max-width: 480px) { .member-form-grid { grid-template-columns: 1fr; }.member-invite-description { padding-top: 4px; } }
+@media (max-width: 760px) { .modal-backdrop:has(.member-modal) { position: fixed; } }

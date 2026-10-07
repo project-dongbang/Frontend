@@ -66,3 +66,13 @@ test('the club chooser preserves the member dashboard context', () => {
   assert.match(html, /role="dialog"/)
   assert.match(html, /aria-label="닫기"/)
 })
+
+test('club creation and join overlays expose accessible dialogs', () => {
+  const create = renderPath('/clubs/new')
+  const join = renderPath('/clubs/join')
+
+  assert.match(create, /role="dialog"/)
+  assert.match(create, /aria-labelledby="club-create-title"/)
+  assert.match(join, /role="dialog"/)
+  assert.match(join, /aria-labelledby="club-join-title"/)
+})
