@@ -1,3 +1,5 @@
+.app-shell:has(.members-page) { position: relative; }
+.modal-backdrop:has(.member-modal) { position: absolute; }
 .content:has(.members-page) { max-width: 948px; }
 .members-page .page-header { margin-bottom: 22px; }
 .members-page .page-header h1 { font-size: 28px; line-height: 1.3; }
