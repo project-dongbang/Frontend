@@ -14,3 +14,4 @@
 .signup-actions { display: flex; min-height: 54px; align-items: end; margin-top: 20px; }
 .signup-actions .button { min-height: 36px; padding: 0 13px; border-radius: 8px; font-size: 12px; }
 @media (max-width: 600px) { .signup-form-grid { grid-template-columns: 1fr; }.signup-modal { max-height: calc(100dvh - 40px); overflow-y: auto; }.signup-description { align-items: start; padding-bottom: 12px; } }
+@media (max-width: 760px) { .modal-backdrop:has(.signup-modal) { position: fixed; } }

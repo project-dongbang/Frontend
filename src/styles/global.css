@@ -72,6 +72,7 @@ main { min-height: 100vh; margin-left: 232px; padding: 96px 38px 48px; }.content
   main { margin-left: 0; padding: 80px 16px 32px; }
   .page-header > :last-child { display: grid; width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .page-header > :last-child .button { width: 100%; min-width: 0; padding-inline: 10px; }
+  .modal-backdrop .modal header > button { width: 44px; height: 44px; flex: 0 0 44px; }
 }
 
 @media (max-width: 420px) {

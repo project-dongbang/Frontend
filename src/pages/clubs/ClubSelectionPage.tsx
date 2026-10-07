@@ -1,7 +1,7 @@
-import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '../../components/common'
 import { ClubBackdrop } from './ClubBackdrop'
+import { useClubDialog } from './useClubDialog'
 import './ClubPage.css'
 
 export function ClubSelectionPage() {
@@ -9,26 +9,24 @@ export function ClubSelectionPage() {
   const [searchParams] = useSearchParams()
   const isMember = searchParams.get('role') === 'member'
   const dashboardPath = isMember ? '/dashboard?role=member' : '/dashboard'
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') navigate(dashboardPath)
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [dashboardPath, navigate])
+  const close = () => navigate(dashboardPath)
+  const { dialogRef, handleBackdropMouseDown } =
+    useClubDialog<HTMLElement>({
+      onClose: close,
+      closeOnDesktop: true,
+      escapeOnDesktop: true,
+    })
 
   return (
     <ClubBackdrop member={isMember}>
-      <div className="club-overlay" onMouseDown={() => navigate(dashboardPath)}>
-        <section className="club-choice-modal" role="dialog" aria-modal="true" aria-labelledby="club-choice-title" onMouseDown={(event) => event.stopPropagation()}>
+      <div className="club-overlay" onMouseDown={handleBackdropMouseDown}>
+        <section ref={dialogRef} tabIndex={-1} className="club-choice-modal" role="dialog" aria-modal="true" aria-labelledby="club-choice-title">
           <header>
             <div>
               <span className="modal-kicker">DONG BANG</span>
               <h2 id="club-choice-title">내 동아리</h2>
             </div>
-            <button type="button" aria-label="닫기" onClick={() => navigate(dashboardPath)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" /></svg></button>
+            <button type="button" aria-label="닫기" onClick={close}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" /></svg></button>
           </header>
           <div className="club-choice-body">
             <p>함께하는 동아리를 선택해 주세요.</p>
