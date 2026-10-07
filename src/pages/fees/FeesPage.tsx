@@ -25,7 +25,7 @@ import {
 import './fees.css'
 
 export function FeesPage() {
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const role = searchParams.get('role')
   const [activeTab, setActiveTab] =
     useState<FeesTab>('ledger')
@@ -44,7 +44,7 @@ export function FeesPage() {
   })
 
   const [feeItemModalOpen, setFeeItemModalOpen] =
-    useState(false)
+    useState(() => searchParams.get('dialog') === 'fee-item-create')
   const [editingFeeCollection, setEditingFeeCollection] =
     useState<FeeCollection | null>(null)
   const [incomeModalOpen, setIncomeModalOpen] =
@@ -55,6 +55,11 @@ export function FeesPage() {
   const closeFeeItemModal = () => {
     setFeeItemModalOpen(false)
     setEditingFeeCollection(null)
+    if (searchParams.get('dialog') === 'fee-item-create') {
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.delete('dialog')
+      setSearchParams(nextParams, { replace: true })
+    }
   }
 
   const handleFeeItemSave = (

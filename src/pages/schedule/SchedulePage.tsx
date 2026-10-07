@@ -11,7 +11,7 @@ import { ScheduleParticipantEditModal } from './ScheduleParticipantEditModal'
 import './schedule.css'
 
 export function SchedulePage() {
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
 const role = searchParams.get('role')
 
 const isMember = role === 'member'
@@ -19,7 +19,17 @@ const isMember = role === 'member'
 
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(
+    () => searchParams.get('dialog') === 'schedule-create',
+  )
+  const closeCreateModal = () => {
+    setIsCreateModalOpen(false)
+    if (searchParams.get('dialog') === 'schedule-create') {
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.delete('dialog')
+      setSearchParams(nextParams, { replace: true })
+    }
+  }
   const [selectedItem, setSelectedItem] =
   useState<CalendarItem | null>(null)
   const [editingItem, setEditingItem] =
@@ -133,7 +143,7 @@ const handleParticipantEditRequest = (
       <ScheduleFormModal
         key={isCreateModalOpen ? 'create-open' : 'create-closed'}
         open={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={closeCreateModal}
       />
       <ScheduleFormModal
         key={editingItem?.id ?? 'edit-empty'}

@@ -207,6 +207,9 @@ export function FeeItemModal({
       >
         <form
           className="fee-create-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="fee-item-modal-title"
           onSubmit={handleSubmit}
           onMouseDown={(event) => event.stopPropagation()}
         >
@@ -215,7 +218,7 @@ export function FeeItemModal({
               <div className="fees-modal-eyebrow">
                 DONG BANG
               </div>
-              <h2>
+              <h2 id="fee-item-modal-title">
                 {isEditing
                   ? '납부 항목 수정'
                   : '납부 항목 등록'}
