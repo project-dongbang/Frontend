@@ -169,3 +169,259 @@
     height: min(62vw, 340px);
   }
 }
+
+/* GAL004 · GAL005 management forms */
+.gallery-manage-modal {
+  width: min(620px, calc(100vw - 40px));
+}
+
+.gallery-manage-modal > header {
+  min-height: 91px;
+  box-sizing: border-box;
+  align-items: center;
+  padding: 22px 23px;
+}
+
+.gallery-manage-modal > header > button {
+  width: 32px;
+  height: 32px;
+}
+
+.gallery-manage-modal .modal-body {
+  display: block;
+  box-sizing: border-box;
+  padding: 24px;
+}
+
+.gallery-manage-modal.is-add .modal-body {
+  min-height: 172px;
+}
+
+.gallery-manage-modal.is-edit .modal-body {
+  min-height: 291px;
+}
+
+.gallery-manage-form {
+  margin: 0;
+}
+
+.gallery-manage-field {
+  display: block;
+  min-height: 68px;
+  color: var(--color-text-primary, #17212b);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.gallery-manage-field > span {
+  display: block;
+  min-height: 14px;
+  line-height: 14px;
+}
+
+.gallery-manage-field > input:not([type='file']) {
+  width: 100%;
+  height: 44px;
+  box-sizing: border-box;
+  margin-top: 7px;
+  padding: 0 12px;
+  border: 1px solid #ccd7df;
+  border-radius: 10px;
+  outline: 0;
+  color: var(--color-text-primary, #17212b);
+  background: #fff;
+  font: inherit;
+  font-weight: 500;
+}
+
+.gallery-manage-field > input:not([type='file']):focus {
+  border-color: var(--color-bg-brand, #214a6b);
+  box-shadow: 0 0 0 3px rgba(33, 74, 107, 0.08);
+}
+
+.gallery-file-field {
+  margin-top: 20px;
+}
+
+.gallery-file-control {
+  display: block;
+  width: 100%;
+  height: 23px;
+  margin-top: 7px;
+  color: var(--color-text-secondary, #66717e);
+  font-family: inherit;
+  font-size: 11px;
+}
+
+.gallery-file-control::file-selector-button {
+  height: 23px;
+  margin-right: 9px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border-default, #e3e8ec);
+  border-radius: 7px;
+  color: var(--color-text-primary, #17212b);
+  background: #fff;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.gallery-file-field small {
+  display: block;
+  margin-top: 34px;
+  color: var(--color-text-secondary, #66717e);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+}
+
+.gallery-manage-submit {
+  width: 100%;
+  height: 36px;
+  margin-top: 20px;
+  border: 0;
+  border-radius: 9px;
+  color: #fff;
+  background: var(--color-bg-brand, #214a6b);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.gallery-manage-submit:hover {
+  background: var(--color-bg-brand-strong, #17364f);
+}
+
+.gallery-manage-submit:focus-visible,
+.gallery-file-control:focus-visible {
+  outline: 2px solid #86b1cf;
+  outline-offset: 2px;
+}
+
+.gallery-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* GAL006 delete confirmation */
+.gallery-delete-modal {
+  width: min(560px, calc(100vw - 40px));
+  min-height: 356px;
+}
+
+.modal-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.gallery-delete-modal .modal-body {
+  display: block;
+  height: 238px;
+  box-sizing: border-box;
+  padding: 28px;
+}
+
+.gallery-delete-content {
+  display: grid;
+  grid-template-rows: 18px 18px 18px 70px 18px;
+  gap: 12px;
+}
+
+.gallery-delete-content > strong {
+  color: var(--color-text-primary, #17212b);
+  font-size: 16px;
+  line-height: 18px;
+}
+
+.gallery-delete-content > p {
+  overflow: hidden;
+  margin: 0;
+  color: var(--color-text-secondary, #66717e);
+  font-size: 12px;
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+.gallery-delete-content .gallery-delete-summary {
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  box-sizing: border-box;
+  padding: 0 16px;
+}
+
+.gallery-delete-content > small {
+  color: var(--color-status-danger, #d94c4c);
+  font-size: 11px;
+  line-height: 18px;
+}
+
+.gallery-delete-actions {
+  min-height: 118px;
+  box-sizing: border-box;
+  align-items: flex-start !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+  padding: 0 28px !important;
+  border-top: 0 !important;
+}
+
+.gallery-delete-actions .button {
+  min-height: 42px;
+  font-size: 12px;
+}
+
+.gallery-delete-actions .button-secondary {
+  min-width: 76px;
+}
+
+.gallery-delete-actions .button-danger {
+  min-width: 108px;
+}
+
+@media (max-width: 660px) {
+  .gallery-manage-modal,
+  .gallery-delete-modal {
+    width: calc(100vw - 24px);
+  }
+
+  .gallery-manage-modal > header,
+  .gallery-manage-modal .modal-body {
+    padding-inline: 18px;
+  }
+
+  .gallery-delete-modal {
+    min-height: 0;
+  }
+
+  .gallery-delete-modal .modal-body {
+    height: auto;
+    padding: 24px 20px;
+  }
+
+  .gallery-delete-content {
+    grid-template-rows: auto;
+  }
+
+  .gallery-delete-content > p {
+    overflow: visible;
+    white-space: normal;
+  }
+
+  .gallery-delete-actions {
+    min-height: 74px;
+    padding-inline: 20px !important;
+  }
+}

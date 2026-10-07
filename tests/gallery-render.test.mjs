@@ -8,6 +8,8 @@ import { createServer } from 'vite'
 let server
 let App
 let GalleryDetailModal
+let GalleryPhotoFormModal
+let GalleryDeleteModal
 let galleryMock
 
 before(async () => {
@@ -21,6 +23,16 @@ before(async () => {
       '/src/pages/gallery/GalleryDetailModal.tsx',
     )
   ).GalleryDetailModal
+  GalleryPhotoFormModal = (
+    await server.ssrLoadModule(
+      '/src/pages/gallery/GalleryPhotoFormModal.tsx',
+    )
+  ).GalleryPhotoFormModal
+  GalleryDeleteModal = (
+    await server.ssrLoadModule(
+      '/src/pages/gallery/GalleryDeleteModal.tsx',
+    )
+  ).GalleryDeleteModal
   galleryMock = (
     await server.ssrLoadModule(
       '/src/pages/gallery/galleryMock.ts',
@@ -105,4 +117,67 @@ test('GAL007 renders read-only member photo detail', () => {
   assert.match(html, /2026년 2학기 개강 총회/)
   assert.doesNotMatch(html, /gallery-detail-footer/)
   assert.doesNotMatch(html, />수정<\/button>|>삭제<\/button>/)
+})
+
+const formCallbacks = {
+  onTitleChange() {},
+  onFileChange() {},
+  onClose() {},
+  onSubmit() {},
+}
+
+test('GAL004 renders title and optional photo replacement', () => {
+  const html = renderToStaticMarkup(
+    createElement(GalleryPhotoFormModal, {
+      ...formCallbacks,
+      mode: 'edit',
+      open: true,
+      title: galleryMock[0].title,
+    }),
+  )
+
+  assert.match(html, /사진 수정/)
+  assert.match(html, /value="2026년 2학기 개강 총회"/)
+  assert.match(html, /사진 교체/)
+  assert.match(html, /type="file"/)
+  assert.match(
+    html,
+    /새 사진을 선택하지 않으면 제목만 변경됩니다/,
+  )
+  assert.match(html, />저장<\/button>/)
+})
+
+test('GAL005 asks only for a title after photo selection', () => {
+  const html = renderToStaticMarkup(
+    createElement(GalleryPhotoFormModal, {
+      ...formCallbacks,
+      mode: 'add',
+      open: true,
+      title: '',
+    }),
+  )
+
+  assert.match(html, /사진 설명/)
+  assert.match(html, /placeholder="예: 9월 개강 총회"/)
+  assert.match(html, />사진 추가<\/button>/)
+  assert.doesNotMatch(html, /사진 교체|type="file"/)
+})
+
+test('GAL006 renders photo context and destructive confirmation', () => {
+  const html = renderToStaticMarkup(
+    createElement(GalleryDeleteModal, {
+      open: true,
+      photo: galleryMock[0],
+      onClose() {},
+      onConfirm() {},
+    }),
+  )
+
+  assert.match(html, /gallery-delete-modal/)
+  assert.match(html, /이 사진을 삭제할까요/)
+  assert.match(html, /2026년 2학기 개강 총회/)
+  assert.match(html, /등록일 2026.09.01 · 운영진 등록/)
+  assert.match(html, /삭제한 사진은 복구할 수 없습니다/)
+  assert.match(html, />취소<\/button>/)
+  assert.match(html, />사진 삭제<\/button>/)
 })
