@@ -84,7 +84,7 @@ const handleParticipantEditRequest = (
           {!isMember && (
           <button
             type="button"
-            className="schedule-create-button"
+            className="page-header-action schedule-create-button"
             onClick={() => setIsCreateModalOpen(true)}
           >
             <span>＋</span>

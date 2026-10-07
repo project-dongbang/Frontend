@@ -103,7 +103,7 @@ const handleDownload = () => {
 
           <button
             type="button"
-            className="attendance-refresh-button"
+            className="page-header-action attendance-refresh-button"
             onClick={handleRefresh}
           >
             새로고침
