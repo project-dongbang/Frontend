@@ -30,7 +30,6 @@ export function FeesLedger({
         </div>
 
         <div className="fees-toolbar">
-          <button type="button">전체 내역</button>
           <button type="button">내보내기</button>
         </div>
       </div>
