@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { MemberFeesPage } from './MemberFeesPage'
+import { ApiMemberFeesPage } from './ApiMemberFeesPage'
 import { DashboardShell } from '../dashboard/DashboardShell'
 import { ExpenseCreateModal } from './components/ExpenseCreateModal'
 import { FeeItemModal } from './components/FeeItemModal'
@@ -23,8 +23,13 @@ import {
 } from './feesMock'
 
 import './fees.css'
+import { feesApi, organizationApi } from '../../api/services'
+import { errorMessage } from '../../api/client'
+import { useSession } from '../../context/SessionContext'
+import type { FeesTransaction, FeePaymentMember } from './feesMock'
 
 export function FeesPage() {
+  const { activeOrganization } = useSession()
   const [searchParams, setSearchParams] = useSearchParams()
   const role = searchParams.get('role')
   const [activeTab, setActiveTab] =
@@ -34,6 +39,10 @@ export function FeesPage() {
     useState(feePaymentMembers)
   const [collections, setCollections] =
     useState(feeCollections)
+  const [transactions, setTransactions] = useState<FeesTransaction[]>(feesTransactions)
+  const [availableMembers, setAvailableMembers] = useState<FeePaymentMember[]>(feePaymentMembers)
+  const [requestError, setRequestError] = useState('')
+  const [ledgerSummary, setLedgerSummary] = useState({ balance: feesSummary.balance, expense: feesSummary.semesterExpense })
 
   const [paymentSummary, setPaymentSummary] = useState({
     feeItemId: 21,
@@ -52,6 +61,58 @@ export function FeesPage() {
   const [expenseModalOpen, setExpenseModalOpen] =
     useState(false)
 
+  const loadFees = useCallback(async () => {
+    if (!activeOrganization) return
+    setCollections([])
+    setTransactions([])
+    setAvailableMembers([])
+    setPaymentMembers([])
+    setLedgerSummary({ balance: 0, expense: 0 })
+    setPaymentSummary({ feeItemId: 0, targetCount: 0, paidCount: 0, unpaidCount: 0, paymentRate: 0 })
+    try {
+      const [ledgerRaw, itemsRaw, memberRaw] = await Promise.all([
+        feesApi.ledger(activeOrganization.organizationId),
+        feesApi.feeItems(activeOrganization.organizationId),
+        organizationApi.members(activeOrganization.organizationId),
+      ])
+      const ledger = ledgerRaw as { content?: Array<Record<string, unknown>>; summary?: Record<string, unknown> }
+      const items = itemsRaw as { content?: Array<Record<string, unknown>> }
+      const mappedTransactions: FeesTransaction[] = (ledger.content ?? []).map((item) => ({
+        id: String(item.transactionId ?? item.feeItemId),
+        date: String(item.occurredOn ?? '').replaceAll('-', '.'),
+        title: String(item.title ?? ''),
+        description: String(item.counterparty ?? ''),
+        category: String(item.category ?? (item.transactionType === 'INCOME' ? '수입' : '기타')),
+        amount: Number(item.amount ?? 0),
+        type: item.transactionType === 'INCOME' ? 'income' : 'expense',
+        author: String(item.createdByName ?? '시스템'),
+        proofText: item.hasEvidence ? '영수증 보기' : '상세 보기',
+      }))
+      setTransactions(mappedTransactions)
+      const summary = ledger.summary ?? {}
+      const incomeTotal = Number(summary.totalIncome ?? summary.income ?? summary.incomeAmount ?? 0)
+      const expenseTotal = Number(summary.totalExpense ?? summary.expense ?? summary.expenseAmount ?? 0)
+      setLedgerSummary({ balance: Number(summary.balance ?? summary.currentBalance ?? (incomeTotal - expenseTotal)), expense: expenseTotal })
+      const mappedCollections: FeeCollection[] = (items.content ?? []).map((item) => ({
+        id: String(item.feeItemId), title: String(item.title ?? ''), dueDate: String(item.dueDate ?? '').replaceAll('-', '.'), description: '', bank: '', accountNumber: '', accountHolder: '', categories: [],
+      }))
+      setCollections(mappedCollections)
+      setAvailableMembers(memberRaw.members.map((member) => ({ id: String(member.membershipId), membershipId: String(member.membershipId), name: member.memberName, studentId: member.studentNumber, generation: member.generation || '-', amount: 0, status: 'unpaid' })))
+      if (mappedCollections[0]) {
+        const targetsRaw = await feesApi.feeTargets(activeOrganization.organizationId, mappedCollections[0].id) as { content?: Array<Record<string, unknown>> }
+        const targets = (targetsRaw.content ?? []).map((target): FeePaymentMember => ({
+          id: String(target.feeTargetId), membershipId: String(target.membershipId), name: String(target.name), studentId: String(target.studentNumber), generation: String(target.generation ?? '-'), amount: Number(target.amountDue ?? 0), status: target.status === 'PAID' ? 'paid' : 'unpaid',
+        }))
+        setPaymentMembers(targets)
+        const paidCount = targets.filter((target) => target.status === 'paid').length
+        setPaymentSummary({ feeItemId: Number(mappedCollections[0].id), targetCount: targets.length, paidCount, unpaidCount: targets.length - paidCount, paymentRate: targets.length ? paidCount / targets.length * 100 : 0 })
+      } else setPaymentMembers([])
+      setRequestError('')
+    } catch (error) { setRequestError(errorMessage(error)) }
+  }, [activeOrganization])
+
+  useEffect(() => { queueMicrotask(() => void loadFees()); window.addEventListener('dongbang:fees-changed', loadFees); return () => window.removeEventListener('dongbang:fees-changed', loadFees) }, [loadFees])
+
   const closeFeeItemModal = () => {
     setFeeItemModalOpen(false)
     setEditingFeeCollection(null)
@@ -62,69 +123,38 @@ export function FeesPage() {
     }
   }
 
-  const handleFeeItemSave = (
+  const handleFeeItemSave = async (
     draft: FeeCollectionDraft,
   ) => {
-    if (editingFeeCollection) {
-      // TODO: 납부 항목 수정 API 연결
-      console.log('납부 항목 수정', {
-        id: editingFeeCollection.id,
-        ...draft,
-      })
-
-      setCollections((current) =>
-        current.map((collection) =>
-          collection.id === editingFeeCollection.id
-            ? { ...draft, id: collection.id }
-            : collection,
-        ),
-      )
-    } else {
-      const newCollection = {
-        ...draft,
-        id: `collection-${Date.now()}`,
-      }
-
-      // TODO: 납부 항목 등록 API 연결
-      console.log('납부 항목 등록', newCollection)
-      setCollections((current) => [
-        newCollection,
-        ...current,
-      ])
-    }
-
-    closeFeeItemModal()
+    if (!activeOrganization) return
+    const base = { title: draft.title, dueDate: draft.dueDate.replaceAll('.', '-'), description: draft.description, paymentAccount: { bankName: draft.bank, accountNumber: draft.accountNumber, accountHolder: draft.accountHolder } }
+    const categories = draft.categories.map((category) => ({ name: category.name, amount: category.amount, targetMembershipIds: category.memberIds.map(Number).filter(Number.isFinite) }))
+    try {
+      if (editingFeeCollection) await feesApi.updateFeeItem(activeOrganization.organizationId, editingFeeCollection.id, { ...base, categories })
+      else await feesApi.createFeeItem(activeOrganization.organizationId, { ...base, categories })
+      closeFeeItemModal()
+      await loadFees()
+    } catch (error) { setRequestError(errorMessage(error)) }
   }
 
-  const handleFeeItemDelete = () => {
+  const handleFeeItemDelete = async () => {
     if (!editingFeeCollection) {
       return
     }
 
-    // TODO: 납부 항목 삭제 API 연결
-    console.log('납부 항목 삭제', {
-      id: editingFeeCollection.id,
-    })
-    setCollections((current) =>
-      current.filter(
-        (collection) =>
-          collection.id !== editingFeeCollection.id,
-      ),
-    )
-    closeFeeItemModal()
+    if (!activeOrganization) return
+    try { await feesApi.deleteFeeItem(activeOrganization.organizationId, editingFeeCollection.id); closeFeeItemModal(); await loadFees() }
+    catch (error) { setRequestError(errorMessage(error)) }
   }
 
-  const handlePaymentStatusChange = (
-    collectionId: string,
+  const handlePaymentStatusChange = async (
+    _collectionId: string,
     memberId: string,
     status: 'paid' | 'unpaid',
   ) => {
-    // TODO: 회비 납부 상태 변경 API 연결
-    console.log('회비 납부 상태 변경', {
-      collectionId,
-      memberId,
-      status,
-    })
+    if (!activeOrganization) return
+    try { await feesApi.changeTarget(activeOrganization.organizationId, memberId, status === 'paid' ? 'PAID' : 'UNPAID') }
+    catch (error) { setRequestError(errorMessage(error)); return }
 
     setPaymentMembers((current) =>
       current.map((member) =>
@@ -154,16 +184,65 @@ export function FeesPage() {
     })
   }
 
+  const handleCollectionChange = async (collectionId: string) => {
+    if (!activeOrganization) return
+    try {
+      const targetsRaw = await feesApi.feeTargets(activeOrganization.organizationId, collectionId) as { content?: Array<Record<string, unknown>> }
+      const targets = (targetsRaw.content ?? []).map((target): FeePaymentMember => ({
+        id: String(target.feeTargetId),
+        membershipId: String(target.membershipId),
+        name: String(target.name),
+        studentId: String(target.studentNumber),
+        generation: String(target.generation ?? '-'),
+        amount: Number(target.amountDue ?? 0),
+        status: target.status === 'PAID' ? 'paid' : 'unpaid',
+      }))
+      setPaymentMembers(targets)
+      const paidCount = targets.filter((target) => target.status === 'paid').length
+      setPaymentSummary({ feeItemId: Number(collectionId), targetCount: targets.length, paidCount, unpaidCount: targets.length - paidCount, paymentRate: targets.length ? paidCount / targets.length * 100 : 0 })
+      setRequestError('')
+    } catch (error) {
+      setRequestError(errorMessage(error))
+    }
+  }
+
   const handlePaymentExport = (
     collectionId: string,
   ) => {
-    // TODO: 회비 납부 현황 다운로드 API 연결
-    console.log('회비 납부 현황 내보내기', {
-      collectionId,
-    })
+    if (!activeOrganization) return
+    window.location.assign(feesApi.exportTargetsUrl(activeOrganization.organizationId, collectionId))
   }
-  if (role === 'member') {
-    return <MemberFeesPage />
+  const openFeeEditor = async (collection: FeeCollection) => {
+    if (!activeOrganization) return
+    try {
+      const detail = await feesApi.feeItemDetail(activeOrganization.organizationId, collection.id) as {
+        title?: string
+        dueDate?: string
+        description?: string
+        editDetails?: { paymentAccount?: { bankName?: string; accountNumber?: string; accountHolder?: string }; categoriesEditable?: boolean; categories?: Array<{ categoryId: number; name: string; amount: number; targets?: Array<{ membershipId: number }> }> }
+      }
+      const editDetails = detail.editDetails
+      setEditingFeeCollection({
+        ...collection,
+        title: String(detail.title ?? collection.title),
+        dueDate: String(detail.dueDate ?? collection.dueDate).replaceAll('-', '.'),
+        description: String(detail.description ?? ''),
+        bank: editDetails?.paymentAccount?.bankName ?? '',
+        accountNumber: editDetails?.paymentAccount?.accountNumber ?? '',
+        accountHolder: editDetails?.paymentAccount?.accountHolder ?? '',
+        categories: (editDetails?.categories ?? []).map((category) => ({
+          id: String(category.categoryId),
+          name: category.name,
+          amount: Number(category.amount ?? 0),
+          memberIds: (category.targets ?? []).map((target) => String(target.membershipId)),
+        })),
+      })
+      setFeeItemModalOpen(true)
+      setRequestError('')
+    } catch (error) { setRequestError(errorMessage(error)) }
+  }
+  if (activeOrganization?.myRole === 'MEMBER' || role === 'member') {
+    return <ApiMemberFeesPage />
   }
 
   return (
@@ -217,12 +296,11 @@ export function FeesPage() {
             </button>
           </div>
         </header>
+        {requestError && <p role="alert">{requestError}</p>}
 
         <FeesSummary
-          balance={feesSummary.balance}
-          semesterExpense={
-            feesSummary.semesterExpense
-          }
+          balance={ledgerSummary.balance}
+          semesterExpense={ledgerSummary.expense}
           paidCount={paymentSummary.paidCount}
           totalCount={paymentSummary.targetCount}
         />
@@ -233,8 +311,8 @@ export function FeesPage() {
         />
 
         {activeTab === 'ledger' ? (
-          <FeesLedger
-            transactions={feesTransactions}
+            <FeesLedger
+              transactions={transactions}
           />
         ) : (
           <FeesPayments
@@ -244,9 +322,9 @@ export function FeesPage() {
               handlePaymentStatusChange
             }
             onExport={handlePaymentExport}
+            onCollectionChange={(collectionId) => void handleCollectionChange(collectionId)}
             onEditCollection={(collection) => {
-              setEditingFeeCollection(collection)
-              setFeeItemModalOpen(true)
+              void openFeeEditor(collection)
             }}
           />
         )}
@@ -256,6 +334,7 @@ export function FeesPage() {
         <FeeItemModal
           key={editingFeeCollection?.id ?? 'create'}
           collection={editingFeeCollection ?? undefined}
+          members={availableMembers}
           onClose={closeFeeItemModal}
           onSave={handleFeeItemSave}
           onDelete={

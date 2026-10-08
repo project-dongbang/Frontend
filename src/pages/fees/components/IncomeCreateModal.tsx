@@ -1,4 +1,7 @@
 import { useState, type FormEvent } from 'react'
+import { feesApi } from '../../../api/services'
+import { errorMessage } from '../../../api/client'
+import { useSession } from '../../../context/SessionContext'
 
 type IncomeCreateModalProps = {
   onClose: () => void
@@ -7,6 +10,7 @@ type IncomeCreateModalProps = {
 export function IncomeCreateModal({
   onClose,
 }: IncomeCreateModalProps) {
+  const { activeOrganization } = useSession()
   const [title, setTitle] = useState('')
   const [source, setSource] = useState('')
   const [amount, setAmount] = useState('')
@@ -24,7 +28,7 @@ const [receivedOn, setReceivedOn] =
   const [memo, setMemo] = useState('')
   const [error, setError] = useState('')
 
-  const handleSubmit = (
+  const handleSubmit = async (
     event: FormEvent<HTMLFormElement>,
   ) => {
     event.preventDefault()
@@ -51,17 +55,17 @@ const [receivedOn, setReceivedOn] =
 
     const payload = {
       title: title.trim(),
-      source: source.trim(),
+      counterparty: source.trim(),
       amount: numericAmount,
-      receivedOn,
+      occurredOn: receivedOn,
       memo: memo.trim(),
     }
-
-    // TODO:
-    // POST /api/v1/organizations/{organizationId}/ledger/incomes
-    console.log('입금 내역 등록', payload)
-
-    onClose()
+    if (!activeOrganization) { setError('동아리를 먼저 선택해 주세요.'); return }
+    try {
+      await feesApi.createIncome(activeOrganization.organizationId, payload)
+      window.dispatchEvent(new Event('dongbang:fees-changed'))
+      onClose()
+    } catch (requestError) { setError(errorMessage(requestError)) }
   }
 
   return (

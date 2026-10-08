@@ -9,6 +9,7 @@ import {
   type FeeCategory,
   type FeeCollection,
   type FeeCollectionDraft,
+  type FeePaymentMember,
 } from '../feesMock'
 import { FeeMemberPickerModal } from './FeeMemberPickerModal'
 
@@ -17,12 +18,13 @@ type FeeItemModalProps = {
   onClose: () => void
   onSave: (collection: FeeCollectionDraft) => void
   onDelete?: () => void
+  members?: FeePaymentMember[]
 }
 
 const categoryPalette = ['', 'coral', 'green', 'amber']
 
-const createInitialCategories = (): FeeCategory[] => {
-  const memberIds = feePaymentMembers.map(
+const createInitialCategories = (members: FeePaymentMember[]): FeeCategory[] => {
+  const memberIds = members.map(
     (member) => member.id,
   )
 
@@ -56,6 +58,7 @@ export function FeeItemModal({
   onClose,
   onSave,
   onDelete,
+  members = feePaymentMembers,
 }: FeeItemModalProps) {
   const isEditing = Boolean(collection)
   const [title, setTitle] = useState(
@@ -84,7 +87,7 @@ export function FeeItemModal({
           ...category,
           memberIds: [...category.memberIds],
         }))
-      : createInitialCategories(),
+      : createInitialCategories(members),
   )
   const [editingCategoryId, setEditingCategoryId] =
     useState<string | null>(null)
@@ -175,11 +178,11 @@ export function FeeItemModal({
     if (
       categories.some(
         (category) =>
-          !category.name.trim() || category.amount <= 0,
+          !category.name.trim() || category.amount <= 0 || category.memberIds.length === 0,
       )
     ) {
       setError(
-        '카테고리 이름과 0원보다 큰 납부 금액을 입력해 주세요.',
+        '각 카테고리에 이름, 0원보다 큰 납부 금액, 대상 회원을 지정해 주세요.',
       )
       return
     }
@@ -333,14 +336,14 @@ export function FeeItemModal({
                   {categories.map((category, index) => {
                     const selectedMembers = category.memberIds
                       .map((memberId) =>
-                        feePaymentMembers.find(
+                        members.find(
                           (member) => member.id === memberId,
                         ),
                       )
                       .filter(
                         (
                           member,
-                        ): member is (typeof feePaymentMembers)[number] =>
+                        ): member is FeePaymentMember =>
                           Boolean(member),
                       )
                     const preview = selectedMembers.slice(0, 5)
@@ -534,6 +537,7 @@ export function FeeItemModal({
       {editingCategory && (
         <FeeMemberPickerModal
           category={editingCategory}
+          members={members}
           onClose={() => setEditingCategoryId(null)}
           onSave={(memberIds) =>
             saveCategoryMembers(editingCategory.id, memberIds)

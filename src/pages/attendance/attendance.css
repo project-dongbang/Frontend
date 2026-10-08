@@ -250,6 +250,11 @@
   font-weight: 800;
 }
 
+.attendance-checkin-token { display: grid; gap: 10px; width: 100%; padding: 10px; place-items: center; border-radius: 10px; background: rgba(255,255,255,.94); text-align: center; }
+.attendance-checkin-token span { color: #526573; font-size: 12px; font-weight: 700; }
+.attendance-checkin-token code { max-width: 100%; overflow-wrap: anywhere; color: #17364f; font-size: 11px; line-height: 1.4; }
+.attendance-checkin-token button { padding: 6px 10px; border: 0; border-radius: 7px; color: white; background: #214a6b; cursor: pointer; font-size: 12px; }
+
 .attendance-qr-time {
   display: flex;
   align-items: center;
@@ -878,6 +883,12 @@
   border-bottom: 1px solid var(--color-border-default);
 }
 
+.member-checkin-form { display: grid; grid-template-columns: 1fr 1.4fr auto; align-items: end; gap: 12px; margin: 18px 0 24px; padding: 16px; border: 1px solid var(--color-border-default); border-radius: 14px; background: #f8fafb; }
+.member-checkin-form label { display: grid; gap: 7px; color: #526573; font-size: 12px; font-weight: 700; }
+.member-checkin-form input, .member-checkin-form select { width: 100%; min-height: 42px; padding: 9px 11px; border: 1px solid var(--color-border-default); border-radius: 9px; background: white; color: #17364f; font: inherit; }
+.member-checkin-form button { min-height: 42px; padding: 0 16px; border: 0; border-radius: 9px; background: #214a6b; color: white; font: inherit; font-weight: 700; cursor: pointer; }
+.member-checkin-form button:disabled { opacity: .55; cursor: not-allowed; }
+
 .member-attendance-card-head h2 {
   margin: 0;
   color: var(--color-text-primary);
@@ -994,6 +1005,8 @@
   .member-attendance-card-head {
     padding: 16px;
   }
+
+  .member-checkin-form { grid-template-columns: 1fr; }
 
   .member-attendance-table {
     min-width: 650px;

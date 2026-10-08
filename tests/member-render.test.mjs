@@ -8,12 +8,14 @@ import { createServer } from 'vite'
 let server
 let App
 let MemberFormModal
+let MemberRoleModal
 let membersMock
 
 before(async () => {
   server = await createServer({ server: { middlewareMode: true, watch: null }, appType: 'custom' })
   App = (await server.ssrLoadModule('/src/App.tsx')).default
   MemberFormModal = (await server.ssrLoadModule('/src/pages/members/MemberFormModal.tsx')).MemberFormModal
+  MemberRoleModal = (await server.ssrLoadModule('/src/pages/members/MemberRoleModal.tsx')).MemberRoleModal
   membersMock = (await server.ssrLoadModule('/src/pages/members/membersMock.ts')).membersMock
   // Only the invitation's origin is needed for server-side rendering; no browser is launched.
   globalThis.window = { location: { origin: 'https://dongbang.example' } }
@@ -46,7 +48,7 @@ test('the invitation deep link renders the modal with the current origin and joi
   const html = renderPath('/members?dialog=invite')
   assert.match(html, /role="dialog"/)
   assert.match(html, /https:\/\/dongbang.example\/clubs\/join\?invite=DB-DLOG/)
-  assert.match(html, /멤버 직접 등록/)
+  assert.doesNotMatch(html, /멤버 직접 등록/)
 })
 
 test('the join route prefills the shared invitation code', () => {
@@ -55,14 +57,19 @@ test('the join route prefills the shared invitation code', () => {
   assert.match(html, /required=""/)
 })
 
-test('edit and create dialogs render the correct defaults without a payment field', () => {
-  const props = { members: membersMock, onClose() {}, onSave() {} }
-  const edit = renderToStaticMarkup(createElement(MemberFormModal, { ...props, member: membersMock[1] }))
-  const create = renderToStaticMarkup(createElement(MemberFormModal, props))
-  assert.match(edit, /멤버 정보 수정/)
-  assert.match(edit, /value="윤민지"/)
-  assert.match(create, /멤버 등록/)
-  assert.match(create, /value="13기"/)
-  assert.match(create, /selected="">일반 회원/)
-  assert.doesNotMatch(edit + create, /name="payment"/)
+test('member information editing exposes only fields supported by the deployed API', () => {
+  const html = renderToStaticMarkup(createElement(MemberFormModal, { member: membersMock[1], onClose() {}, onSave() {} }))
+  assert.match(html, /멤버 정보 수정/)
+  assert.match(html, /윤민지/)
+  assert.match(html, /name="generation"/)
+  assert.match(html, /name="position"/)
+  assert.match(html, /name="status"/)
+  assert.doesNotMatch(html, /name="name"|name="studentId"|name="role"|멤버 등록/)
+})
+
+test('role changes use the separate role endpoint fields', () => {
+  const html = renderToStaticMarkup(createElement(MemberRoleModal, { member: membersMock[1], onClose() {}, onSave() {} }))
+  assert.match(html, /역할 변경/)
+  assert.match(html, /name="role"/)
+  assert.doesNotMatch(html, /name="generation"|name="position"|name="status"/)
 })

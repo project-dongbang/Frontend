@@ -7,6 +7,8 @@ import { BellIcon, CalendarIcon, CheckIcon, GalleryIcon, HomeIcon, MenuIcon, Set
 import { MyPageModals } from './MyPageModals'
 import { HelpGuideModal } from './HelpGuideModal'
 import { NotificationModal, type NotificationItem } from './NotificationModal'
+import { notificationApi } from '../../api/services'
+import { useSession } from '../../context/SessionContext'
 
 type NavItem = { label: string; icon: string }
 
@@ -40,6 +42,7 @@ const initialNotifications: NotificationItem[] = [
 ]
 
 export function AppLayout({ children, navItems, activeNav, onNavChange, onOrganizationClick, onSettingsClick, settingsActive = false, showSettings = navItems.length === 5, organizationName, userName, notificationCount = initialNotifications.length }: AppLayoutProps) {
+  const { activeOrganization } = useSession()
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const isMember = params.get('role') === 'member'
@@ -52,9 +55,23 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
   const [notifications, setNotifications] = useState(() =>
     initialNotifications.slice(0, notificationCount),
   )
-  const [displayName, setDisplayName] = useState(userName)
+  const [savedDisplayName, setSavedDisplayName] = useState<string | null>(null)
+  const displayName = savedDisplayName ?? userName
   const unreadCount = notifications.filter((notification) => notification.unread).length
   const dashboardPath = isMember ? '/dashboard?role=member' : '/dashboard'
+  useEffect(() => {
+    if (!activeOrganization) return
+    notificationApi.list(activeOrganization.organizationId).then((response) => {
+      const pathByType: Record<string, string> = { EVENT: '/calendar', FEE_ITEM: '/fees', ATTENDANCE_SESSION: '/attendance' }
+      setNotifications((response.content ?? []).map((item) => ({
+        id: String(item.notificationId),
+        title: item.message || item.title,
+        date: `${new Date(item.sentAt).toLocaleDateString('ko-KR')} ${item.isRead ? '· 읽음' : '· 새 알림'}`,
+        path: pathByType[item.referenceType] ?? '/dashboard',
+        unread: !item.isRead,
+      })))
+    }).catch(() => {})
+  }, [activeOrganization])
   const closeMobileMenu = (restoreFocus = false) => {
     setMenuOpen(false)
     if (restoreFocus) {
@@ -184,14 +201,18 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
       </aside>
 
       <main><div className="content">{children}</div></main>
-      <MyPageModals mode={myPageMode} userName={displayName} onClose={() => setMyPageMode(null)} onOpenActivity={() => setMyPageMode('activity')} onSavedName={setDisplayName} />
+      <MyPageModals mode={myPageMode} userName={displayName} onClose={() => setMyPageMode(null)} onOpenActivity={() => setMyPageMode('activity')} onSavedName={setSavedDisplayName} />
       <HelpGuideModal open={helpGuideOpen} onClose={() => setHelpGuideOpen(false)} />
       <NotificationModal
         open={notificationOpen}
         notifications={notifications}
         onClose={() => setNotificationOpen(false)}
-        onMarkAllRead={() => setNotifications((items) => items.map((item) => ({ ...item, unread: false })))}
+        onMarkAllRead={() => {
+          if (activeOrganization) void notificationApi.readAll(activeOrganization.organizationId)
+          setNotifications((items) => items.map((item) => ({ ...item, unread: false })))
+        }}
         onNotificationClick={(id, path) => {
+          void notificationApi.read(Number(id)).catch(() => {})
           setNotifications((items) => items.map((item) => item.id === id ? { ...item, unread: false } : item))
           setNotificationOpen(false)
           navigate(`${path}${isMember ? '?role=member' : ''}`)

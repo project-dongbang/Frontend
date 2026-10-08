@@ -4,12 +4,14 @@ type ScheduleDeleteModalProps = {
   open: boolean
   item: CalendarItem | null
   onClose: () => void
+  onConfirm: (item: CalendarItem) => void | Promise<void>
 }
 
 export function ScheduleDeleteModal({
   open,
   item,
   onClose,
+  onConfirm,
 }: ScheduleDeleteModalProps) {
   if (!open || !item) return null
 
@@ -66,10 +68,7 @@ export function ScheduleDeleteModal({
           <button
             type="button"
             className="schedule-delete-confirm"
-            onClick={() => {
-              // TODO: 일정 삭제 API 연결
-              onClose()
-            }}
+            onClick={() => void onConfirm(item)}
           >
             일정 삭제
           </button>

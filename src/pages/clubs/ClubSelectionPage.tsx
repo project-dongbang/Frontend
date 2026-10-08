@@ -3,11 +3,13 @@ import { Button } from '../../components/common'
 import { ClubBackdrop } from './ClubBackdrop'
 import { useClubDialog } from './useClubDialog'
 import './ClubPage.css'
+import { useSession } from '../../context/SessionContext'
 
 export function ClubSelectionPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const isMember = searchParams.get('role') === 'member'
+  const { organizations, activeOrganization, selectOrganization, loading } = useSession()
+  const isMember = activeOrganization?.myRole === 'MEMBER' || searchParams.get('role') === 'member'
   const dashboardPath = isMember ? '/dashboard?role=member' : '/dashboard'
   const close = () => navigate(dashboardPath)
   const { dialogRef, handleBackdropMouseDown } =
@@ -29,17 +31,17 @@ export function ClubSelectionPage() {
             <button type="button" aria-label="닫기" onClick={close}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" /></svg></button>
           </header>
           <div className="club-choice-body">
-            <p>함께하는 동아리를 선택해 주세요.</p>
-            <button type="button" className="club-choice active" onClick={() => navigate(dashboardPath)}>
-              <b>D</b>
-              <span><strong>D.Log 개발동아리</strong><small>현재 동아리</small></span>
-              <em>✓</em>
-            </button>
-            <button type="button" className="club-choice" onClick={() => navigate('/dashboard?role=member')}>
-              <b>북</b>
-              <span><strong>북적북적 독서동아리</strong><small>동아리 열기</small></span>
-              <em>→</em>
-            </button>
+            <p>{loading ? '동아리 목록을 불러오고 있어요…' : '함께하는 동아리를 선택해 주세요.'}</p>
+            {organizations.map((organization) => {
+              const active = organization.organizationId === activeOrganization?.organizationId
+              const path = organization.myRole === 'MEMBER' ? '/dashboard?role=member' : '/dashboard'
+              return <button type="button" key={organization.organizationId} className={`club-choice ${active ? 'active' : ''}`} onClick={() => { selectOrganization(organization); navigate(path) }}>
+                <b>{organization.name.slice(0, 1)}</b>
+                <span><strong>{organization.name}</strong><small>{active ? '현재 동아리' : '동아리 열기'}</small></span>
+                <em>{active ? '✓' : '→'}</em>
+              </button>
+            })}
+            {!loading && organizations.length === 0 && <p>참여 중인 동아리가 없습니다. 새 동아리를 만들거나 초대 코드로 참여해 주세요.</p>}
           </div>
           <footer>
             <Button onClick={() => navigate('/clubs/new')}>+ 동아리 만들기</Button>
