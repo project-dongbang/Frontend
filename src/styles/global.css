@@ -32,3 +32,61 @@ main { min-height: 100vh; margin-left: 232px; padding: 96px 38px 48px; }.content
 .modal header > button { display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1; }
 .organization-switcher i { display: grid; width: 14px; height: 14px; place-items: center; font-size: 15px; font-style: normal; line-height: 1; transform: translateY(-1px); }
 .sidebar:hover .sidebar-help { display: block; }
+
+/* 하나의 사이드바 내비게이션을 데스크톱과 모바일에서 함께 사용합니다. */
+.brand { padding: 0; border: 0; background: transparent; }
+.mobile-nav-backdrop, .sidebar-organization { display: none; }
+
+@media (min-width: 761px) {
+  .sidebar, .sidebar:hover { width: 232px; }
+  .semester { width: 190px; opacity: 1; }
+  .sidebar nav button { width: 208px; }
+  .sidebar nav button span, .sidebar-settings span { width: auto; opacity: 1; }
+  .sidebar-settings { width: 208px; }
+  .sidebar-help, .sidebar:hover .sidebar-help { display: block; }
+  main { margin-left: 232px; }
+}
+
+@media (max-width: 760px) {
+  .topbar { height: 56px; padding: 0 14px; }
+  .topbar-actions { gap: 7px; }
+  .organization-switcher { display: none; }
+  .icon-button { width: 38px; height: 38px; }
+  .avatar { width: 36px; height: 36px; }
+  .mobile-menu { display: grid; width: 38px; height: 38px; }
+  .mobile-nav-backdrop { position: fixed; z-index: 14; inset: 56px 0 0; display: block; width: 100%; padding: 0; border: 0; background: rgba(15, 29, 40, .42); }
+  .sidebar { z-index: 15; top: 56px; left: -100%; width: min(82vw, 280px); padding: 18px 12px 20px; overflow-x: hidden; overflow-y: auto; visibility: hidden; transition: left .2s ease; }
+  .sidebar.is-open { left: 0; width: min(82vw, 280px); visibility: visible; box-shadow: 12px 0 36px rgba(23,54,79,.28); }
+  .sidebar:hover { width: min(82vw, 280px); }
+  .sidebar-organization { display: grid; width: 100%; min-height: 64px; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 11px; margin-bottom: 18px; padding: 10px 11px; border: 1px solid rgba(255,255,255,.13); border-radius: 12px; color: #fff; background: rgba(255,255,255,.07); text-align: left; }
+  .sidebar-organization > b { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 10px; color: #214a6b; background: #fff; }
+  .sidebar-organization > span { display: grid; min-width: 0; gap: 2px; }
+  .sidebar-organization strong { overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+  .sidebar-organization small { color: #9fb4c3; font-size: 10px; }
+  .sidebar-organization i { color: #9fb4c3; font-size: 20px; font-style: normal; }
+  .semester { width: auto; opacity: 1; }
+  .sidebar nav, .sidebar nav button, .sidebar-settings, .sidebar-settings button { width: 100%; }
+  .sidebar nav button span, .sidebar-settings span { width: auto; opacity: 1; }
+  .sidebar-settings { margin-top: 16px; }
+  .sidebar-help, .sidebar:hover .sidebar-help { display: none; }
+  main { margin-left: 0; padding: 80px 16px 32px; }
+  .page-header > :last-child { display: grid; width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .page-header > :last-child .button { width: 100%; min-width: 0; padding-inline: 10px; }
+  .modal-backdrop .modal header > button { width: 44px; height: 44px; flex: 0 0 44px; }
+}
+
+@media (max-width: 420px) {
+  .brand strong { display: none; }
+  .page-header > :last-child { grid-template-columns: 1fr; }
+}
+
+@media (min-width: 761px) {
+  .page-header-action {
+    width: 132px;
+    flex: 0 0 132px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar { transition: none; }
+}

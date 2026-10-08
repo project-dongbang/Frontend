@@ -966,3 +966,11 @@
   background: #214a6b;
   color: #ffffff;
 }
+
+@media (max-width: 760px) {
+  .schedule-modal-close {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+  }
+}

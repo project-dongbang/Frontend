@@ -1,7 +1,10 @@
+.app-shell:has(.my-page-modal) { position: relative; }
+.modal-backdrop:has(.my-page-modal) { position: absolute; }
 .my-page-modal { width: min(100%, 620px); }
 .my-page-modal .modal-body { gap: 24px; }
 .profile-summary { display: flex; align-items: center; gap: 16px; padding-bottom: 22px; border-bottom: 1px solid #edf0f2; }
 .profile-avatar { display: grid; width: 64px; height: 64px; flex: 0 0 64px; place-items: center; border-radius: 50%; color: #214a6b; background: #dce7ed; font-size: 24px; font-weight: 800; }
+.profile-avatar img { width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }
 .profile-summary strong { display: block; color: #17212b; font-size: 17px; }
 .profile-summary p { margin: 4px 0 8px; color: #66717e; font-size: 13px; }
 .profile-image-actions { display: flex; gap: 7px; color: #a1abb4; font-size: 12px; }
@@ -21,3 +24,4 @@
 .activity-list article strong { color: #273440; font-size: 14px; }
 .activity-list article span { color: #77838d; font-size: 12px; }
 @media (max-width: 520px) { .profile-form-grid, .activity-summary { grid-template-columns: 1fr; }.my-page-modal-actions { flex-wrap: wrap; }.my-page-modal-actions .logout-button { width: 100%; margin: 3px 0 0; text-align: right; } }
+@media (max-width: 760px) { .modal-backdrop:has(.my-page-modal) { position: fixed; } }

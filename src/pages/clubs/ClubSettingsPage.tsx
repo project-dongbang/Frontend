@@ -1,16 +1,55 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, Card, Input, Modal, Select, Textarea } from '../../components/common'
 import { ClubShell } from './ClubShell'
 import './ClubPage.css'
+import { organizationApi } from '../../api/services'
+import { errorMessage } from '../../api/client'
+import { useSession } from '../../context/SessionContext'
 
 export function ClubSettingsPage() {
   const navigate = useNavigate()
+  const { activeOrganization, refresh } = useSession()
   const [dangerAction, setDangerAction] = useState<'leave' | 'delete' | null>(null)
+  const [name, setName] = useState(activeOrganization?.name ?? '')
+  const [description, setDescription] = useState('')
+  const [operatingSemester, setOperatingSemester] = useState('2026-2')
+  const [defaultFeeAmount, setDefaultFeeAmount] = useState('40000')
+  const [bankName, setBankName] = useState('')
+  const [accountNumber, setAccountNumber] = useState('')
+  const [accountHolder, setAccountHolder] = useState('')
+  const [requestError, setRequestError] = useState('')
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    if (!activeOrganization) return
+    organizationApi.detail(activeOrganization.organizationId).then((detail) => {
+      setName(String(detail.name ?? activeOrganization.name)); setDescription(String(detail.description ?? ''))
+      const settings = detail.settings as { operatingSemester?: string; defaultFeeAmount?: number; paymentAccount?: { bankName?: string; accountNumber?: string; accountHolder?: string } } | undefined
+      if (settings) {
+        setOperatingSemester(settings.operatingSemester ?? '2026-2')
+        setDefaultFeeAmount(String(settings.defaultFeeAmount ?? 0))
+        setBankName(settings.paymentAccount?.bankName ?? '')
+        setAccountNumber(settings.paymentAccount?.accountNumber ?? '')
+        setAccountHolder(settings.paymentAccount?.accountHolder ?? '')
+      }
+    }).catch((error) => setRequestError(errorMessage(error)))
+  }, [activeOrganization])
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    navigate('/dashboard')
+    if (!activeOrganization) return
+    try {
+      await organizationApi.update(activeOrganization.organizationId, {
+        name: name.trim(), description: description.trim(),
+        settings: {
+          operatingSemester,
+          defaultFeeAmount: Number(defaultFeeAmount || 0),
+          ...(bankName.trim() && accountNumber.trim() && accountHolder.trim() ? { paymentAccount: { bankName: bankName.trim(), accountNumber: accountNumber.trim(), accountHolder: accountHolder.trim() } } : {}),
+        },
+      })
+      await refresh(); navigate('/dashboard')
+    }
+    catch (error) { setRequestError(errorMessage(error)) }
   }
 
   return (
@@ -25,25 +64,25 @@ export function ClubSettingsPage() {
           <Card className="club-settings-primary">
             <div className="club-settings-content">
               <h2>기본 정보</h2>
-              <Input label="동아리 이름" defaultValue="D.Log 개발동아리" required />
-              <Textarea label="동아리 소개" defaultValue="함께 만들고, 함께 성장하는 개발동아리입니다." rows={4} />
-              <Select label="운영 학기" defaultValue="2026 · 2학기">
-                <option>2026 · 2학기</option>
-                <option>2026 · 1학기</option>
+              <Input label="동아리 이름" value={name} onChange={(event) => setName(event.target.value)} required />
+              <Textarea label="동아리 소개" value={description} onChange={(event) => setDescription(event.target.value)} rows={4} />
+              <Select label="운영 학기" value={operatingSemester} onChange={(event) => setOperatingSemester(event.target.value)}>
+                {['2026-2', '2026-1', '2027-1', '2027-2'].map((term) => <option key={term} value={term}>{term.slice(0, 4)} · {term.endsWith('1') ? '1학기' : '2학기'}</option>)}
               </Select>
               <h2 className="club-settings-section-title">회비 안내</h2>
               <div className="club-settings-grid">
-                <Input label="이번 학기 회비 (원)" defaultValue="40000" inputMode="numeric" />
-                <Select label="은행" defaultValue="">
+                <Input label="이번 학기 회비 (원)" value={defaultFeeAmount} onChange={(event) => setDefaultFeeAmount(event.target.value)} inputMode="numeric" />
+                <Select label="은행" value={bankName} onChange={(event) => setBankName(event.target.value)}>
                   <option value="">은행명</option>
                   <option>카카오뱅크</option>
                   <option>국민은행</option>
                 </Select>
-                <Input label="입금 계좌" placeholder="입금 계좌번호" />
-                <Input label="예금주" placeholder="예금주" />
+                <Input label="입금 계좌" value={accountNumber} onChange={(event) => setAccountNumber(event.target.value)} placeholder="입금 계좌번호" />
+                <Input label="예금주" value={accountHolder} onChange={(event) => setAccountHolder(event.target.value)} placeholder="예금주" />
               </div>
               <p className="club-setting-hint">회비 설정 변경은 이미 등록된 납부 내역의 금액을 바꾸지 않습니다.</p>
               <Button className="club-save-button" type="submit">변경사항 저장</Button>
+              {requestError && <p role="alert">{requestError}</p>}
             </div>
           </Card>
           <div className="club-settings-side">
@@ -74,7 +113,11 @@ export function ClubSettingsPage() {
         tone="danger"
         confirmLabel={dangerAction === 'delete' ? '동아리 삭제' : '동아리 나가기'}
         onClose={() => setDangerAction(null)}
-        onConfirm={() => navigate('/clubs')}
+        onConfirm={() => {
+          if (!activeOrganization || !dangerAction) return
+          const request = dangerAction === 'delete' ? organizationApi.remove(activeOrganization.organizationId) : organizationApi.leave(activeOrganization.organizationId)
+          void request.then(async () => { setDangerAction(null); await refresh(); navigate('/clubs') }).catch((error) => setRequestError(errorMessage(error)))
+        }}
       />
     </ClubShell>
   )

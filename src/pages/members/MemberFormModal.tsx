@@ -1,54 +1,37 @@
 import { useState, type FormEvent } from 'react'
 import { Button, Input, Modal, Select } from '../../components/common'
-import { memberRoles, memberStatuses, normalizeMemberForm, validateMemberForm } from './memberModel'
-import type { Member, MemberForm, MemberFormErrors, MemberRole, MemberStatus } from './memberModel'
-import { memberClubMock } from './membersMock'
+import type { Member, MemberStatus } from './memberModel'
+
+export type MemberInfoUpdate = Pick<Member, 'generation' | 'position' | 'status'>
 
 type Props = {
-  member?: Member
-  members: Member[]
+  member: Member
   onClose: () => void
-  onSave: (form: MemberForm, editingId?: string) => void
+  onSave: (value: MemberInfoUpdate, memberId: string) => void
 }
 
-export function MemberFormModal({ member, members, onClose, onSave }: Props) {
-  const [form, setForm] = useState<MemberForm>(() => member ? { ...member } : {
-    name: '', studentId: '', generation: memberClubMock.currentGeneration, role: '일반 회원', status: '활동',
-  })
-  const [errors, setErrors] = useState<MemberFormErrors>({})
-
-  function change<K extends keyof MemberForm>(key: K, value: MemberForm[K]) {
-    setForm((current) => ({ ...current, [key]: value }))
-    setErrors((current) => ({ ...current, [key]: undefined }))
-  }
+export function MemberFormModal({ member, onClose, onSave }: Props) {
+  const [generation, setGeneration] = useState(member.generation === '-' ? '' : member.generation)
+  const [position, setPosition] = useState(member.position ?? '')
+  const [status, setStatus] = useState<MemberStatus>(member.status === '탈퇴' ? '활동' : member.status)
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const nextErrors = validateMemberForm(form, members, member?.id)
-    setErrors(nextErrors)
-    if (Object.keys(nextErrors).length) {
-      const firstField = Object.keys(nextErrors)[0]
-      event.currentTarget.querySelector<HTMLElement>(`[name="${firstField}"]`)?.focus()
-      return
-    }
-    onSave(normalizeMemberForm(form), member?.id)
+    onSave({ generation: generation.trim(), position: position.trim(), status }, member.id)
   }
 
-  return <Modal open title={member ? '멤버 정보 수정' : '멤버 등록'} className="member-modal" onClose={onClose}>
+  return <Modal open title="멤버 정보 수정" className="member-modal" onClose={onClose}>
     <form className="member-form" onSubmit={submit} noValidate>
+      <p className="member-role-target"><strong>{member.name}</strong><span>{member.studentId} · {member.generation}</span></p>
       <div className="member-form-grid">
-        <Input label="이름" name="name" value={form.name} onChange={(event) => change('name', event.target.value)} aria-required="true" aria-invalid={Boolean(errors.name)} error={errors.name} maxLength={50} />
-        <Input label="학번" name="studentId" value={form.studentId} onChange={(event) => change('studentId', event.target.value)} aria-required="true" aria-invalid={Boolean(errors.studentId)} error={errors.studentId} inputMode="numeric" maxLength={20} />
-        <Input label="기수" name="generation" value={form.generation} onChange={(event) => change('generation', event.target.value)} aria-required="true" aria-invalid={Boolean(errors.generation)} error={errors.generation} maxLength={10} />
-        <Select label="역할" name="role" value={form.role} onChange={(event) => change('role', event.target.value as MemberRole)} aria-invalid={Boolean(errors.role)} error={errors.role}>
-          {memberRoles.map((role) => <option key={role}>{role}</option>)}
-        </Select>
-        <Select label="활동 상태" name="status" value={form.status} onChange={(event) => change('status', event.target.value as MemberStatus)} aria-invalid={Boolean(errors.status)} error={errors.status}>
-          {memberStatuses.map((status) => <option key={status}>{status}</option>)}
+        <Input label="기수" name="generation" value={generation} onChange={(event) => setGeneration(event.target.value)} maxLength={20} />
+        <Input label="직책" name="position" value={position} onChange={(event) => setPosition(event.target.value)} maxLength={50} />
+        <Select label="활동 상태" name="status" value={status} disabled={member.role === '회장'} onChange={(event) => setStatus(event.target.value as MemberStatus)}>
+          <option value="활동">활동</option><option value="휴면">휴면</option>
         </Select>
       </div>
-      <p className="member-form-hint">납부 상태는 납부 항목 관리에서 변경할 수 있어요.</p>
-      <Button type="submit" className="member-save-button">저장하기</Button>
+      <p className="member-form-hint">기수·직책·활동 상태를 수정할 수 있어요. 대표의 활동 상태는 변경할 수 없습니다.</p>
+      <Button type="submit" className="member-save-button">정보 저장</Button>
     </form>
   </Modal>
 }

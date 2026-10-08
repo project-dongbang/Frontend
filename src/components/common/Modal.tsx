@@ -1,9 +1,9 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { Button } from './Button'
 
-type ModalProps = { open: boolean; title: string; description?: string; children?: ReactNode; confirmLabel?: string; cancelLabel?: string; tone?: 'default' | 'danger'; className?: string; footer?: ReactNode; onClose: () => void; onConfirm?: () => void }
+type ModalProps = { open: boolean; title: string; description?: string; children?: ReactNode; confirmLabel?: string; cancelLabel?: string; tone?: 'default' | 'danger'; className?: string; footer?: ReactNode; hideHeader?: boolean; onClose: () => void; onConfirm?: () => void }
 
-export function Modal({ open, title, description, children, confirmLabel = '저장', cancelLabel = '취소', tone = 'default', className = '', footer, onClose, onConfirm }: ModalProps) {
+export function Modal({ open, title, description, children, confirmLabel = '저장', cancelLabel = '취소', tone = 'default', className = '', footer, hideHeader = false, onClose, onConfirm }: ModalProps) {
   const titleId = useId()
   const dialogRef = useRef<HTMLElement>(null)
   useEffect(() => { if (!open) return; const onKeyDown = (event: KeyboardEvent) => event.key === 'Escape' && onClose(); window.addEventListener('keydown', onKeyDown); return () => window.removeEventListener('keydown', onKeyDown) }, [open, onClose])
@@ -35,5 +35,5 @@ export function Modal({ open, title, description, children, confirmLabel = '저�
     }
   }, [open])
   if (!open) return null
-  return <div className="modal-backdrop" role="presentation" onMouseDown={onClose}><section ref={dialogRef} tabIndex={-1} className={`modal modal-${tone} ${className}`.trim()} role="dialog" aria-modal="true" aria-labelledby={titleId} onMouseDown={(event) => event.stopPropagation()}><header><div><span className="modal-kicker">DONG BANG</span><h2 id={titleId}>{title}</h2></div><button type="button" aria-label="닫기" onClick={onClose}>×</button></header><div className="modal-body">{description && <p className="modal-description">{description}</p>}{children}</div>{footer ?? (onConfirm && <footer><Button variant="secondary" onClick={onClose}>{cancelLabel}</Button><Button variant={tone === 'danger' ? 'danger' : 'primary'} onClick={onConfirm}>{confirmLabel}</Button></footer>)}</section></div>
+  return <div className="modal-backdrop" role="presentation" onMouseDown={onClose}><section ref={dialogRef} tabIndex={-1} className={`modal modal-${tone} ${className}`.trim()} role="dialog" aria-modal="true" aria-labelledby={titleId} onMouseDown={(event) => event.stopPropagation()}>{hideHeader ? <h2 id={titleId} className="modal-visually-hidden">{title}</h2> : <header><div><span className="modal-kicker">DONG BANG</span><h2 id={titleId}>{title}</h2></div><button type="button" aria-label="닫기" onClick={onClose}>×</button></header>}<div className="modal-body">{description && <p className="modal-description">{description}</p>}{children}</div>{footer ?? (onConfirm && <footer><Button variant="secondary" onClick={onClose}>{cancelLabel}</Button><Button variant={tone === 'danger' ? 'danger' : 'primary'} onClick={onConfirm}>{confirmLabel}</Button></footer>)}</section></div>
 }

@@ -1,0 +1,17 @@
+.app-shell:has(.signup-modal) { position: relative; }
+.modal-backdrop:has(.signup-modal) { position: absolute; }
+.signup-modal { width: min(100%, 620px); border-radius: 18px; }
+.signup-modal header { min-height: 91px; align-items: center; padding: 22px 23px; }
+.signup-modal h2 { margin-top: 8px; font-size: 20px; line-height: 24px; }
+.signup-modal header > button { width: 32px; height: 32px; font-size: 20px; }
+.signup-modal .modal-body { gap: 0; padding: 24px; }
+.signup-description { display: flex; min-height: 32px; align-items: end; margin: 0; color: var(--color-text-secondary); font-size: 13px; line-height: 18px; }
+.signup-form { display: grid; }
+.signup-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.signup-form .form-field { min-height: 68px; align-content: start; gap: 7px; }
+.signup-form .field-label { font-size: 12px; line-height: 14px; }
+.signup-form .field-control { height: 44px; border-radius: 9px; font-size: 13px; }
+.signup-actions { display: flex; min-height: 54px; align-items: end; margin-top: 20px; }
+.signup-actions .button { min-height: 36px; padding: 0 13px; border-radius: 8px; font-size: 12px; }
+@media (max-width: 600px) { .signup-form-grid { grid-template-columns: 1fr; }.signup-modal { max-height: calc(100dvh - 40px); overflow-y: auto; }.signup-description { align-items: start; padding-bottom: 12px; } }
+@media (max-width: 760px) { .modal-backdrop:has(.signup-modal) { position: fixed; } }

@@ -1,6 +1,7 @@
 export const PATHS = {
   login: '/login',
   signup: '/signup',
+  authCallback: '/auth/callback',
   clubs: '/clubs',
   createClub: '/clubs/new',
   joinClub: '/clubs/join',

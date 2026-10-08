@@ -1,13 +1,6 @@
 import { useMemo, useState } from 'react'
 
-import { feePaymentMembers } from '../feesMock'
-
-type FeeCategory = {
-  id: string
-  name: string
-  amount: number
-  memberIds: string[]
-}
+import { feePaymentMembers, type FeeCategory, type FeePaymentMember } from '../feesMock'
 
 type MemberSort = 'name' | 'joinedAt' | 'role'
 
@@ -15,6 +8,7 @@ type FeeMemberPickerModalProps = {
   category: FeeCategory
   onClose: () => void
   onSave: (memberIds: string[]) => void
+  members?: FeePaymentMember[]
 }
 
 const getJoinedAt = (memberId: string) => {
@@ -34,6 +28,7 @@ export function FeeMemberPickerModal({
   category,
   onClose,
   onSave,
+  members = feePaymentMembers,
 }: FeeMemberPickerModalProps) {
   const [selectedIds, setSelectedIds] =
     useState<string[]>(category.memberIds)
@@ -42,7 +37,7 @@ export function FeeMemberPickerModal({
     useState<MemberSort>('name')
 
   const sortedMembers = useMemo(() => {
-    const list = [...feePaymentMembers]
+    const list = [...members]
 
     if (sort === 'name') {
       return list.sort((a, b) =>
@@ -61,7 +56,7 @@ export function FeeMemberPickerModal({
     // 현재 mock에는 role 정보가 없으므로
     // API 연결 전까지 기존 순서 유지
     return list
-  }, [sort])
+  }, [sort, members])
 
   const toggleMember = (memberId: string) => {
     setSelectedIds((current) =>
@@ -73,7 +68,7 @@ export function FeeMemberPickerModal({
 
   const selectAll = () => {
     setSelectedIds(
-      feePaymentMembers.map((member) => member.id),
+      members.map((member) => member.id),
     )
   }
 

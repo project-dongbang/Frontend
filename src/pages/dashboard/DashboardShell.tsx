@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { AppLayout } from '../../components/layout/AppLayout'
 import { PATHS } from '../../routes/paths'
 import type { DashboardRole } from './DashboardPage'
+import { useSession } from '../../context/SessionContext'
 
 const adminNavItems = [
   { label: '대시보드', icon: 'home' },
@@ -10,6 +11,7 @@ const adminNavItems = [
   { label: '일정 · 행사', icon: 'calendar' },
   { label: '출석 관리', icon: 'check' },
   { label: '회비 관리', icon: 'wallet' },
+  { label: '사진첩', icon: 'gallery' },
 ]
 
 const memberNavItems = [
@@ -17,6 +19,7 @@ const memberNavItems = [
   { label: '일정 · 행사', icon: 'calendar' },
   { label: '내 출석', icon: 'check' },
   { label: '회비', icon: 'wallet' },
+  { label: '사진첩', icon: 'gallery' },
 ]
 
 export function DashboardShell({
@@ -28,6 +31,7 @@ export function DashboardShell({
 }) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
+  const { activeOrganization, user } = useSession()
   const isAdmin = role === 'admin'
   const navPaths: Record<string, string> = {
     '대시보드': PATHS.dashboard,
@@ -37,6 +41,7 @@ export function DashboardShell({
     '내 출석': PATHS.attendance,
     '회비 관리': PATHS.fees,
     '회비': PATHS.fees,
+    '사진첩': PATHS.gallery,
   }
   const activeNav = (isAdmin ? adminNavItems : memberNavItems).find((item) => navPaths[item.label] === pathname)?.label ?? ''
   return (
@@ -47,9 +52,10 @@ export function DashboardShell({
         if (path) navigate(`${path}${isAdmin ? '' : '?role=member'}`)
       }}
       navItems={isAdmin ? adminNavItems : memberNavItems}
-      organizationName="D.Log 개발동아리"
-      userName={isAdmin ? '김동방' : '남은우'}
+      organizationName={activeOrganization?.name ?? '동아리를 선택해 주세요'}
+      userName={user?.name ?? '사용자'}
       notificationCount={isAdmin ? 3 : 1}
+      showSettings={isAdmin}
     >
       {children}
     </AppLayout>

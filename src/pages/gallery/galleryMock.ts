@@ -5,6 +5,7 @@ export type GalleryPhoto = {
   title: string
   createdAt: string
   tone: GalleryTone
+  imageUrl?: string
 }
 
 export const galleryMock: GalleryPhoto[] = [

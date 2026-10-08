@@ -6,11 +6,14 @@ import {
   type FormEvent,
 } from 'react'
 import receiptIcon from '../../../assets/receipt.svg'
+import { feesApi } from '../../../api/services'
+import { errorMessage } from '../../../api/client'
+import { useSession } from '../../../context/SessionContext'
 type ExpenseCreateModalProps = {
   onClose: () => void
 }
 
-const MAX_RECEIPT_SIZE = 3 * 1024 * 1024
+const MAX_RECEIPT_SIZE = 5 * 1024 * 1024
 
 const getToday = () => {
   const now = new Date()
@@ -24,6 +27,7 @@ const getToday = () => {
 export function ExpenseCreateModal({
   onClose,
 }: ExpenseCreateModalProps) {
+  const { activeOrganization } = useSession()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [receipt, setReceipt] = useState<File | null>(null)
@@ -36,6 +40,25 @@ export function ExpenseCreateModal({
     useState('동아리 카드')
   const [memo, setMemo] = useState('')
   const [error, setError] = useState('')
+  const [recognizing, setRecognizing] = useState(false)
+
+  const recognizeReceipt = async () => {
+    if (!receipt || !activeOrganization) return
+    try {
+      setRecognizing(true)
+      const raw = await feesApi.recognizeReceipt(activeOrganization.organizationId, receipt)
+      const result = raw as { itemTitle?: string; spentOn?: string; amount?: number; merchant?: string; storeName?: string; category?: string; paymentMethod?: string; memo?: string }
+      if (result.itemTitle) setTitle(result.itemTitle)
+      if (result.spentOn) setSpentOn(result.spentOn)
+      if (result.amount) setAmount(String(Math.round(result.amount)))
+      if (result.merchant || result.storeName) setMerchant(result.merchant || result.storeName || '')
+      if (result.category) setCategory(result.category)
+      if (result.paymentMethod) setPaymentMethod(result.paymentMethod)
+      if (result.memo) setMemo(result.memo)
+      setError('인식 결과를 입력했습니다. 금액과 날짜를 확인해 주세요.')
+    } catch (requestError) { setError(errorMessage(requestError)) }
+    finally { setRecognizing(false) }
+  }
 
   const handleReceipt = (file: File) => {
     const allowedTypes = [
@@ -82,7 +105,7 @@ export function ExpenseCreateModal({
     }
   }
 
-  const handleSubmit = (
+  const handleSubmit = async (
     event: FormEvent<HTMLFormElement>,
   ) => {
     event.preventDefault()
@@ -115,20 +138,19 @@ export function ExpenseCreateModal({
 
     const payload = {
       title: title.trim(),
-      spentOn,
+      occurredOn: spentOn,
       amount: numericAmount,
-      merchant: merchant.trim(),
+      counterparty: merchant.trim(),
       category,
       paymentMethod,
       memo: memo.trim(),
-      receipt,
     }
-
-    // TODO:
-    // POST /api/v1/organizations/{organizationId}/ledger/expenses
-    console.log('출금 내역 등록', payload)
-
-    onClose()
+    if (!activeOrganization) { setError('동아리를 먼저 선택해 주세요.'); return }
+    try {
+      await feesApi.createExpense(activeOrganization.organizationId, payload, receipt)
+      window.dispatchEvent(new Event('dongbang:fees-changed'))
+      onClose()
+    } catch (requestError) { setError(errorMessage(requestError)) }
   }
 
   return (
@@ -193,7 +215,7 @@ export function ExpenseCreateModal({
                 <p>
                   사진을 끌어 놓거나 파일을 선택하세요.
                   <br />
-                  JPG · PNG · WEBP / 최대 3MB
+                  JPG · PNG · WEBP / 최대 5MB
                 </p>
 
                 <div className="expense-file-row">
@@ -228,11 +250,11 @@ export function ExpenseCreateModal({
               </p>
 
               <div className="expense-ai-box">
-                <button type="button" disabled>
-                  AI 자동 입력
+                <button type="button" disabled={!receipt || recognizing} onClick={() => void recognizeReceipt()}>
+                  {recognizing ? '영수증 인식 중…' : 'AI 자동 입력'}
                 </button>
 
-                <span>추후 제공</span>
+                <span>{receipt ? '인식 후 내용을 확인해 주세요' : '먼저 영수증을 선택하세요'}</span>
               </div>
 
               <p className="expense-helper">

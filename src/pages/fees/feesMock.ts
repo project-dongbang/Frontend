@@ -10,6 +10,9 @@ export type FeesTransaction = {
   type: FeesTransactionType
   author: string
   proofText: string
+  evidenceUrl?: string
+  memo?: string
+  paymentMethod?: string
 }
 
 export const feesSummary = {
@@ -90,14 +93,28 @@ export const feesTransactions: FeesTransaction[] = [
 
 export type FeePaymentStatus = 'paid' | 'unpaid'
 
+export type FeeCategory = {
+  id: string
+  name: string
+  amount: number
+  memberIds: string[]
+}
+
 export type FeeCollection = {
   id: string
   title: string
   dueDate: string
+  description: string
   bank: string
   accountNumber: string
   accountHolder: string
+  categories: FeeCategory[]
 }
+
+export type FeeCollectionDraft = Omit<
+  FeeCollection,
+  'id'
+>
 
 export type FeePaymentMember = {
   id: string
@@ -106,24 +123,69 @@ export type FeePaymentMember = {
   generation: string
   amount: number
   status: FeePaymentStatus
+  membershipId?: string
 }
 
 export const feeCollections: FeeCollection[] = [
   {
     id: 'collection-1',
-    title: '2026년 2학기 정기 회비',
+    title: '2026년 2학기 정기 납부',
     dueDate: '2026.09.20',
+    description:
+      '2학기 동아리 운영을 위한 정기 납부입니다.',
     bank: '카카오뱅크',
-    accountNumber: '3333-00-0000000',
+    accountNumber: '3333-12-3456789',
     accountHolder: '김동방',
+    categories: [
+      {
+        id: 'category-normal',
+        name: '일반 납부',
+        amount: 40000,
+        memberIds: Array.from(
+          { length: 58 },
+          (_, index) => `member-${index}`,
+        ),
+      },
+      {
+        id: 'category-discount',
+        name: '할인 납부',
+        amount: 30000,
+        memberIds: Array.from(
+          { length: 3 },
+          (_, index) => `member-${index + 58}`,
+        ),
+      },
+      {
+        id: 'category-support',
+        name: '지원 납부',
+        amount: 50000,
+        memberIds: Array.from(
+          { length: 3 },
+          (_, index) => `member-${index + 61}`,
+        ),
+      },
+    ],
   },
   {
     id: 'collection-2',
     title: '2026년 1학기 정기 회비',
     dueDate: '2026.03.20',
+    description:
+      '1학기 동아리 운영을 위한 정기 회비입니다.',
     bank: '카카오뱅크',
     accountNumber: '3333-00-0000000',
     accountHolder: '김동방',
+    categories: [
+      {
+        id: 'category-previous-normal',
+        name: '일반 납부',
+        amount: 40000,
+        memberIds: Array.from(
+          { length: 64 },
+          (_, index) => `member-${index}`,
+        ),
+      },
+    ],
   },
 ]
 

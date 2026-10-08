@@ -1,62 +1,177 @@
-import { useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Button, Input, Modal } from '../../components/common'
 import { DashboardShell } from '../dashboard/DashboardShell'
+import { GalleryArtwork } from './GalleryArtwork'
+import { GalleryDeleteModal } from './GalleryDeleteModal'
+import { GalleryDetailModal } from './GalleryDetailModal'
+import { GalleryPhotoFormModal } from './GalleryPhotoFormModal'
 import { galleryMock, type GalleryPhoto, type GalleryTone } from './galleryMock'
 import './gallery.css'
+import { photoApi } from '../../api/services'
+import { errorMessage } from '../../api/client'
+import { useSession } from '../../context/SessionContext'
 
-type Dialog = 'detail' | 'add' | 'edit' | 'delete' | null
-
-const nextTone: GalleryTone = 'sky'
+type Dialog = 'detail' | 'edit' | 'delete' | null
 
 export function GalleryPage() {
   const [params] = useSearchParams()
-  const isMember = params.get('role') === 'member'
+  const { activeOrganization, user } = useSession()
+  const isMember = activeOrganization?.myRole === 'MEMBER' || params.get('role') === 'member'
   const [photos, setPhotos] = useState(galleryMock)
+  const [photosOrganizationId, setPhotosOrganizationId] = useState<number | null>(null)
   const [selected, setSelected] = useState<GalleryPhoto | null>(null)
   const [dialog, setDialog] = useState<Dialog>(null)
   const [title, setTitle] = useState('')
-  const [fileName, setFileName] = useState('')
-  const fileInput = useRef<HTMLInputElement>(null)
+  const [requestError, setRequestError] = useState('')
+  const currentPhotos = activeOrganization
+    ? photosOrganizationId === activeOrganization.organizationId ? photos : []
+    : photos
 
-  const close = () => { setDialog(null); setSelected(null); setTitle(''); setFileName('') }
-  const openDetail = (photo: GalleryPhoto) => { setSelected(photo); setDialog('detail') }
-  const openEdit = () => { if (!selected) return; setTitle(selected.title); setDialog('edit') }
-  const addPhoto = () => {
-    const trimmedTitle = title.trim()
-    if (!trimmedTitle) return
-    setPhotos((current) => [...current, { id: crypto.randomUUID(), title: trimmedTitle, createdAt: '2026.09.14', tone: nextTone }])
-    close()
+  useEffect(() => {
+    if (!activeOrganization || !user) return
+    const organizationId = activeOrganization.organizationId
+    let cancelled = false
+    photoApi.list(organizationId, user.userId)
+      .then((response) => {
+        if (cancelled) return
+        const mapped = (response.content ?? []).map((photo, index) => {
+          const file = photo.file as { url?: string } | undefined
+          return {
+            id: String(photo.photoId),
+            title: String(photo.title ?? ''),
+            createdAt: String(photo.createdAt ?? '').slice(0, 10).replaceAll('-', '.'),
+            tone: (['sky', 'sand', 'blue'][index % 3] ?? 'sky') as GalleryTone,
+            imageUrl: String(photo.imageUrl ?? file?.url ?? ''),
+          }
+        })
+        setPhotos(mapped)
+        setPhotosOrganizationId(organizationId)
+        setRequestError('')
+      })
+      .catch((error) => {
+        if (cancelled) return
+        setPhotos([])
+        setPhotosOrganizationId(organizationId)
+        setRequestError(errorMessage(error))
+      })
+    return () => { cancelled = true }
+  }, [activeOrganization, user])
+
+  const resetForm = () => {
+    setTitle('')
   }
-  const saveEdit = () => {
-    if (!selected || !title.trim()) return
-    setPhotos((current) => current.map((photo) => photo.id === selected.id ? { ...photo, title: title.trim() } : photo))
-    setSelected((current) => current ? { ...current, title: title.trim() } : current)
-    setDialog('detail')
+  const close = () => {
+    setDialog(null)
+    setSelected(null)
+    resetForm()
   }
-  const deletePhoto = () => {
+  const openDetail = async (photo: GalleryPhoto) => {
+    if (!activeOrganization || !user) { setSelected(photo); setDialog('detail'); return }
+    try {
+      const raw = await photoApi.detail(activeOrganization.organizationId, photo.id, user.userId)
+      const file = raw.file as { url?: string } | undefined
+      const detailed = { ...photo, title: String(raw.title ?? photo.title), imageUrl: String(file?.url ?? photo.imageUrl), createdAt: String(raw.createdAt ?? photo.createdAt).slice(0, 10).replaceAll('-', '.') }
+      setSelected(detailed); setDialog('detail'); setRequestError('')
+    } catch (error) { setRequestError(errorMessage(error)) }
+  }
+  const openEdit = () => {
     if (!selected) return
-    setPhotos((current) => current.filter((photo) => photo.id !== selected.id))
-    close()
+    setTitle(selected.title)
+    setDialog('edit')
+  }
+  const closeEditor = () => {
+    resetForm()
+    setDialog(selected ? 'detail' : null)
+  }
+
+  const saveEdit = async () => {
+    if (!selected || !title.trim()) return
+    const updatedPhoto = {
+      ...selected,
+      title: title.trim(),
+      imageUrl: selected.imageUrl,
+    }
+    if (!activeOrganization || !user) return
+    try {
+      await photoApi.update(activeOrganization.organizationId, selected.id, user.userId, title.trim())
+      setPhotos((current) => current.map((photo) => photo.id === selected.id ? updatedPhoto : photo))
+      setSelected(updatedPhoto); resetForm(); setDialog('detail')
+    } catch (error) { setRequestError(errorMessage(error)) }
+  }
+  const deletePhoto = async () => {
+    if (!selected) return
+    if (!activeOrganization || !user) return
+    try { await photoApi.remove(activeOrganization.organizationId, selected.id, user.userId); setPhotos((current) => current.filter((photo) => photo.id !== selected.id)); close() }
+    catch (error) { setRequestError(errorMessage(error)) }
   }
 
   return <DashboardShell role={isMember ? 'member' : 'admin'}>
     <section className="gallery-page">
-      <header className="gallery-header"><div><span className="gallery-kicker">CLUB GALLERY</span><h1>사진첩</h1><p>동아리 활동의 순간을 함께 기록해요.</p></div>{!isMember && <Button onClick={() => setDialog('add')}>사진 추가</Button>}</header>
-      <section className="gallery-card" aria-label="사진 목록"><div className="gallery-grid">{photos.map((photo) => <button type="button" className={`gallery-thumbnail tone-${photo.tone}`} onClick={() => openDetail(photo)} key={photo.id}><GalleryArtwork tone={photo.tone} /><strong>{photo.title}</strong></button>)}</div><p>썸네일을 누르면 사진을 크게 볼 수 있어요.</p></section>
+      <header className="gallery-header">
+        <div>
+          <span className="gallery-kicker">
+            CLUB GALLERY
+          </span>
+          <h1>사진첩</h1>
+          <p>동아리 활동의 순간을 함께 기록해요.</p>
+        </div>
+
+      </header>
+      {!isMember && <p className="gallery-integration-note">사진 파일 등록·교체 API의 multipart 형식이 Swagger에 명확히 정의되지 않아 현재 사용할 수 없습니다. 기존 사진 제목 수정과 삭제는 가능합니다.</p>}
+      {requestError && <p role="alert">{requestError}</p>}
+
+      <section className="gallery-card" aria-label="사진 목록">
+        <div className="gallery-grid">
+          {currentPhotos.length > 0 ? (
+            currentPhotos.map((photo) => (
+              <button
+                type="button"
+                className={`gallery-thumbnail tone-${photo.tone}`}
+                aria-label={`${photo.title} 사진 상세 보기`}
+                onClick={() => openDetail(photo)}
+                key={photo.id}
+              >
+                <GalleryArtwork
+                  tone={photo.tone}
+                  imageUrl={photo.imageUrl}
+                  alt=""
+                />
+                <strong>{photo.title}</strong>
+              </button>
+            ))
+          ) : (
+            <div className="gallery-empty">
+              <strong>아직 등록된 사진이 없어요.</strong>
+              <span>
+                동아리 활동의 첫 번째 순간을 기록해 보세요.
+              </span>
+            </div>
+          )}
+        </div>
+        <p>썸네일을 누르면 사진을 크게 볼 수 있어요.</p>
+      </section>
     </section>
 
-    <Modal open={dialog === 'detail' && selected !== null} title="사진 상세" onClose={close}><PhotoDetail photo={selected} />{!isMember && <div className="gallery-detail-actions"><Button variant="secondary" onClick={openEdit}>수정</Button><Button onClick={() => setDialog('delete')}>삭제</Button></div>}</Modal>
-    <Modal open={dialog === 'add'} title="사진 설명" onClose={close} confirmLabel="사진 추가" onConfirm={addPhoto}><Input label="사진 제목" placeholder="예: 9월 개강 총회" value={title} onChange={(event) => setTitle(event.target.value)} autoFocus required /><button type="button" className="gallery-file-select" onClick={() => fileInput.current?.click()}>{fileName || '사진 파일 선택'}<span>JPG · PNG · WEBP</span></button></Modal>
-    <Modal open={dialog === 'edit'} title="사진 수정" onClose={() => setDialog('detail')} confirmLabel="저장" onConfirm={saveEdit}><Input label="사진 제목" value={title} onChange={(event) => setTitle(event.target.value)} autoFocus required /><button type="button" className="gallery-file-select" onClick={() => fileInput.current?.click()}>사진 교체<span>{fileName || '새 사진을 선택하지 않으면 제목만 변경됩니다.'}</span></button></Modal>
-    <Modal open={dialog === 'delete' && selected !== null} title="이 사진을 삭제할까요?" description="사진첩과 연결된 활동 화면에서 이 사진이 더 이상 표시되지 않습니다." tone="danger" onClose={() => setDialog('detail')} confirmLabel="사진 삭제" onConfirm={deletePhoto}><div className="gallery-delete-summary"><strong>{selected?.title}</strong><span>등록일 {selected?.createdAt} · 운영진 등록</span></div><p className="gallery-delete-warning">삭제한 사진은 복구할 수 없습니다.</p></Modal>
-    <input ref={fileInput} className="gallery-file-input" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => setFileName(event.target.files?.[0]?.name ?? '')} />
+    <GalleryDetailModal
+      open={dialog === 'detail'}
+      photo={selected}
+      canManage={!isMember}
+      onClose={close}
+      onEdit={openEdit}
+      onDelete={() => setDialog('delete')}
+    />
+    <GalleryPhotoFormModal
+      open={dialog === 'edit'}
+      title={title}
+      onTitleChange={setTitle}
+      onClose={closeEditor}
+      onSubmit={saveEdit}
+    />
+    <GalleryDeleteModal
+      open={dialog === 'delete'}
+      photo={selected}
+      onClose={() => setDialog('detail')}
+      onConfirm={deletePhoto}
+    />
   </DashboardShell>
 }
-
-function PhotoDetail({ photo }: { photo: GalleryPhoto | null }) {
-  if (!photo) return null
-  return <div className="gallery-detail"><div className={`gallery-detail-art tone-${photo.tone}`}><GalleryArtwork tone={photo.tone} /></div><strong>{photo.title}</strong><span>등록일 {photo.createdAt}</span></div>
-}
-
-function GalleryArtwork({ tone }: { tone: GalleryTone }) { return <span className={`gallery-art tone-${tone}`} aria-hidden="true"><i /><b /><em /></span> }

@@ -1,3 +1,5 @@
+.app-shell:has(.notification-modal) { position: relative; }
+.modal-backdrop:has(.notification-modal) { position: absolute; }
 .notification-modal { width: min(100%, 620px); }
 .notification-modal .modal-body { gap: 20px; padding-block: 24px; }
 .notification-intro { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
@@ -12,3 +14,4 @@
 .notification-list small { color: #788590; font-size: 12px; }
 .notification-list em { color: #214a6b; font-size: 21px; font-style: normal; line-height: 1; }
 @media (max-width: 520px) { .notification-intro { align-items: start; }.notification-list > button { padding-inline: 10px; }.notification-list strong { font-size: 13px; } }
+@media (max-width: 760px) { .modal-backdrop:has(.notification-modal) { position: fixed; } }

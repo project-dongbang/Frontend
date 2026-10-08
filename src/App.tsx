@@ -1,5 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { LoginPage } from './pages/auth/login/LoginPage'
+import { SignupPage } from './pages/auth/signup/SignupPage'
+import { AuthCallbackPage } from './pages/auth/AuthCallbackPage'
 import { DashboardPage } from './pages/dashboard/DashboardPage'
 import { SchedulePage } from './pages/schedule/SchedulePage'
 import { AttendancePage } from './pages/attendance/AttendancePage'
@@ -16,6 +18,8 @@ function App() {
   return (
     <Routes>
       <Route path={PATHS.login} element={<LoginPage />} />
+      <Route path={PATHS.signup} element={<SignupPage />} />
+      <Route path={PATHS.authCallback} element={<AuthCallbackPage />} />
       <Route path={PATHS.dashboard} element={<DashboardPage />} />
       <Route path={PATHS.gallery} element={<GalleryPage />} />
       <Route path={PATHS.members} element={<MembersPage />} />

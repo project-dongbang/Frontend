@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { DashboardShell } from '../dashboard/DashboardShell'
 import { CalendarGrid } from './CalendarGrid'
@@ -7,19 +7,35 @@ import { ScheduleFormModal } from './ScheduleFormModal'
 import { ScheduleDetailModal } from './ScheduleDetailModal'
 import { ScheduleDeleteModal } from './ScheduleDeleteModal'
 import { ScheduleEarlyCloseModal } from './ScheduleEarlyCloseModal'
-import { ScheduleParticipantEditModal } from './ScheduleParticipantEditModal'
+import { ApiScheduleParticipantEditModal } from './ApiScheduleParticipantEditModal'
 import './schedule.css'
+import { scheduleApi } from '../../api/services'
+import { errorMessage } from '../../api/client'
+import { useSession } from '../../context/SessionContext'
 
 export function SchedulePage() {
-  const [searchParams] = useSearchParams()
+  const { activeOrganization } = useSession()
+  const [searchParams, setSearchParams] = useSearchParams()
 const role = searchParams.get('role')
 
-const isMember = role === 'member'
+const isMember = activeOrganization?.myRole === 'MEMBER' || role === 'member'
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [items, setItems] = useState<CalendarItem[]>(calendarMockData)
+  const [loadError, setLoadError] = useState('')
 
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(
+    () => searchParams.get('dialog') === 'schedule-create',
+  )
+  const closeCreateModal = () => {
+    setIsCreateModalOpen(false)
+    if (searchParams.get('dialog') === 'schedule-create') {
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.delete('dialog')
+      setSearchParams(nextParams, { replace: true })
+    }
+  }
   const [selectedItem, setSelectedItem] =
   useState<CalendarItem | null>(null)
   const [editingItem, setEditingItem] =
@@ -28,6 +44,38 @@ const [earlyCloseItem, setEarlyCloseItem] =
   useState<CalendarItem | null>(null)
 const [deletingItem, setDeletingItem] =
   useState<CalendarItem | null>(null)
+  const loadCalendar = useCallback(async () => {
+    if (!activeOrganization) return
+    setItems([])
+    try {
+      const response = await scheduleApi.calendar(activeOrganization.organizationId, year, month + 1)
+      setItems((response.events ?? []).map((event) => ({
+        id: String(event.eventId ?? event.feeItemId),
+        title: event.title,
+        type: event.type === 'EVENT' ? 'event' : event.type === 'FEE_DUE' ? 'fee' : 'schedule',
+        start: (event.startsAt ?? `${event.dueDate}T23:59`).slice(0, 16),
+        end: (event.endsAt ?? event.startsAt ?? `${event.dueDate}T23:59`).slice(0, 16),
+      })))
+      setLoadError('')
+    } catch (requestError) { setLoadError(errorMessage(requestError)) }
+  }, [activeOrganization, year, month])
+
+  useEffect(() => { queueMicrotask(() => void loadCalendar()); window.addEventListener('dongbang:schedule-changed', loadCalendar); return () => window.removeEventListener('dongbang:schedule-changed', loadCalendar) }, [loadCalendar])
+
+  const openItem = async (item: CalendarItem) => {
+    if (!activeOrganization || item.type === 'fee') { setSelectedItem(item); return }
+    try {
+      const detail = await scheduleApi.detail(activeOrganization.organizationId, item.id)
+      setSelectedItem({
+        ...item,
+        location: String(detail.location ?? ''),
+        description: String(detail.description ?? ''),
+        capacity: detail.capacity == null ? undefined : Number(detail.capacity),
+        registered: detail.participantCount == null ? undefined : Number(detail.participantCount),
+        deadline: detail.registrationDeadline ? String(detail.registrationDeadline).slice(0, 16) : undefined,
+      })
+    } catch (requestError) { setLoadError(errorMessage(requestError)) }
+  }
   const [participantEditItem, setParticipantEditItem] =
   useState<CalendarItem | null>(null)
   const handlePreviousMonth = () => {
@@ -74,7 +122,7 @@ const handleParticipantEditRequest = (
           {!isMember && (
           <button
             type="button"
-            className="schedule-create-button"
+            className="page-header-action schedule-create-button"
             onClick={() => setIsCreateModalOpen(true)}
           >
             <span>＋</span>
@@ -83,6 +131,7 @@ const handleParticipantEditRequest = (
          )}
         </div>
 
+        {loadError && <p role="alert">{loadError}</p>}
         <div className="calendar-card">
           <div className="calendar-top">
             <h2>
@@ -111,8 +160,8 @@ const handleParticipantEditRequest = (
           <CalendarGrid
             year={year}
             month={month}
-            items={calendarMockData}
-            onItemClick={setSelectedItem}
+            items={items}
+            onItemClick={(item) => void openItem(item)}
           />
         </div>
       </section>
@@ -133,7 +182,7 @@ const handleParticipantEditRequest = (
       <ScheduleFormModal
         key={isCreateModalOpen ? 'create-open' : 'create-closed'}
         open={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={closeCreateModal}
       />
       <ScheduleFormModal
         key={editingItem?.id ?? 'edit-empty'}
@@ -148,22 +197,29 @@ const handleParticipantEditRequest = (
         open={deletingItem !== null}
         item={deletingItem}
         onClose={() => setDeletingItem(null)}
+        onConfirm={async (item) => {
+          if (!activeOrganization) return
+          try { await scheduleApi.remove(activeOrganization.organizationId, item.id); setDeletingItem(null); setSelectedItem(null); await loadCalendar() }
+          catch (requestError) { setLoadError(errorMessage(requestError)) }
+        }}
       />
       <ScheduleEarlyCloseModal
   open={earlyCloseItem !== null}
   item={earlyCloseItem}
   onClose={() => setEarlyCloseItem(null)}
   onConfirm={() => {
-    // TODO: 일정 조기 마감 API 연결
-
-    setEarlyCloseItem(null)
+    if (!activeOrganization || !earlyCloseItem) return
+    void scheduleApi.closeApplications(activeOrganization.organizationId, earlyCloseItem.id)
+      .then(() => setEarlyCloseItem(null))
+      .catch((requestError) => setLoadError(errorMessage(requestError)))
   }}
 />
 
-<ScheduleParticipantEditModal
+<ApiScheduleParticipantEditModal
   open={participantEditItem !== null}
   item={participantEditItem}
   onClose={() => setParticipantEditItem(null)}
+  onSaved={() => void loadCalendar()}
 />
 
     </DashboardShell>
