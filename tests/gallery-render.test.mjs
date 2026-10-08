@@ -54,11 +54,12 @@ function renderPath(path) {
   )
 }
 
-test('GAL001 renders three photos and the admin add action', () => {
+test('GAL001 renders API-backed photos and explains unavailable upload actions', () => {
   const html = renderPath('/gallery')
 
   assert.match(html, /CLUB GALLERY/)
-  assert.match(html, /사진 추가/)
+  assert.match(html, /사진 파일 등록·교체 API의 multipart 형식이 Swagger에 명확히 정의되지 않아 현재 사용할 수 없습니다/)
+  assert.doesNotMatch(html, /사진 추가/)
   assert.equal(
     (html.match(/사진 상세 보기/g) ?? []).length,
     3,
@@ -121,46 +122,23 @@ test('GAL007 renders read-only member photo detail', () => {
 
 const formCallbacks = {
   onTitleChange() {},
-  onFileChange() {},
   onClose() {},
   onSubmit() {},
 }
 
-test('GAL004 renders title and optional photo replacement', () => {
+test('GAL004 renders title editing without unsupported image replacement', () => {
   const html = renderToStaticMarkup(
     createElement(GalleryPhotoFormModal, {
       ...formCallbacks,
-      mode: 'edit',
       open: true,
       title: galleryMock[0].title,
     }),
   )
 
-  assert.match(html, /사진 수정/)
+  assert.match(html, /사진 제목 수정/)
   assert.match(html, /value="2026년 2학기 개강 총회"/)
-  assert.match(html, /사진 교체/)
-  assert.match(html, /type="file"/)
-  assert.match(
-    html,
-    /새 사진을 선택하지 않으면 제목만 변경됩니다/,
-  )
-  assert.match(html, />저장<\/button>/)
-})
-
-test('GAL005 asks only for a title after photo selection', () => {
-  const html = renderToStaticMarkup(
-    createElement(GalleryPhotoFormModal, {
-      ...formCallbacks,
-      mode: 'add',
-      open: true,
-      title: '',
-    }),
-  )
-
-  assert.match(html, /사진 설명/)
-  assert.match(html, /placeholder="예: 9월 개강 총회"/)
-  assert.match(html, />사진 추가<\/button>/)
   assert.doesNotMatch(html, /사진 교체|type="file"/)
+  assert.match(html, />저장<\/button>/)
 })
 
 test('GAL006 renders photo context and destructive confirmation', () => {

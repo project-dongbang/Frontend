@@ -2,6 +2,7 @@
 @media (max-width: 760px) { .gallery-header { align-items: start; flex-direction: column; }.gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }.gallery-thumbnail { min-height: 145px; }.gallery-detail-art { height: 280px; }.gallery-detail-actions { margin-inline: -20px; padding-inline: 20px; } }
 
 /* GAL001 · GAL002 list-screen alignment */
+.gallery-integration-note { margin: -8px 0 18px; color: #66717e; font-size: 12px; line-height: 1.5; }
 .gallery-page {
   width: min(948px, 100%);
 }

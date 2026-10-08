@@ -15,6 +15,7 @@ type FeesPaymentsProps = {
   ) => void
   onExport: (collectionId: string) => void
   onEditCollection: (collection: FeeCollection) => void
+  onCollectionChange: (collectionId: string) => void
 }
 
 type PaymentFilter = 'all' | FeePaymentStatus
@@ -28,6 +29,7 @@ export function FeesPayments({
   onPaymentStatusChange,
   onExport,
   onEditCollection,
+  onCollectionChange,
 }: FeesPaymentsProps) {
   const [selectedCollectionId, setSelectedCollectionId] =
     useState(collections[0]?.id ?? '')
@@ -85,9 +87,10 @@ export function FeesPayments({
           className="filter-select"
           aria-label="회비 선택"
           value={validCollectionId}
-          onChange={(event) =>
+          onChange={(event) => {
             setSelectedCollectionId(event.target.value)
-          }
+            onCollectionChange(event.target.value)
+          }}
         >
           {collections.map((collection) => (
             <option key={collection.id} value={collection.id}>

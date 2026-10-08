@@ -3,6 +3,8 @@ import type { FeesTransaction } from '../feesMock'
 type FeesReceiptModalProps = {
   transaction: FeesTransaction
   onClose: () => void
+  onEdit?: () => void
+  onDelete?: () => void
 }
 
 const formatMoney = (value: number) =>
@@ -11,6 +13,8 @@ const formatMoney = (value: number) =>
 export function FeesReceiptModal({
   transaction,
   onClose,
+  onEdit,
+  onDelete,
 }: FeesReceiptModalProps) {
   return (
     <div
@@ -103,9 +107,7 @@ export function FeesReceiptModal({
                 {transaction.proofText}
               </strong>
 
-              <small>
-                등록된 증빙 자료
-              </small>
+              {transaction.evidenceUrl ? <a href={transaction.evidenceUrl} target="_blank" rel="noreferrer">증빙 파일 열기</a> : <small>등록된 증빙 파일이 없습니다.</small>}
             </div>
 
             <div className="fees-receipt-privacy">
@@ -125,48 +127,8 @@ export function FeesReceiptModal({
             </div>
 
             <div className="fees-receipt-paper">
-              <h3>
-                {transaction.description}
-              </h3>
-
-              <strong className="fees-store-en">
-                {transaction.title}
-              </strong>
-
-              <div className="fees-receipt-divider" />
-
-              <div className="fees-receipt-preview-info">
-                <div>
-                  <span>사용일</span>
-                  <strong>
-                    {transaction.date}
-                  </strong>
-                </div>
-
-                <div>
-                  <span>분류</span>
-                  <strong>
-                    {transaction.category}
-                  </strong>
-                </div>
-
-                <div>
-                  <span>등록자</span>
-                  <strong>
-                    {transaction.author}
-                  </strong>
-                </div>
-              </div>
-
-              <div className="fees-receipt-divider" />
-
-              <div className="fees-receipt-total">
-                <strong>합계</strong>
-
-                <strong>
-                  {formatMoney(transaction.amount)}
-                </strong>
-              </div>
+              {transaction.evidenceUrl ? <a href={transaction.evidenceUrl} target="_blank" rel="noreferrer">실제 영수증 파일 보기 ↗</a> : <p>서버 응답에 영수증 파일 주소가 없습니다.</p>}
+              {transaction.memo && <><div className="fees-receipt-divider" /><p>{transaction.memo}</p></>}
             </div>
 
             <p className="fees-preview-caption">
@@ -185,6 +147,11 @@ export function FeesReceiptModal({
             <span>
               등록된 지출 정보와 증빙을 함께 공개합니다.
             </span>
+          </div>
+
+          <div className="fees-receipt-actions">
+            {onEdit && <button type="button" onClick={onEdit}>수정</button>}
+            {onDelete && <button type="button" onClick={onDelete}>삭제</button>}
           </div>
 
           <button

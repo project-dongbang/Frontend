@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { Button, Input, Modal } from '../../../components/common'
 import { ClubBackdrop } from '../../clubs/ClubBackdrop'
 import { PATHS } from '../../../routes/paths'
+import { authApi } from '../../../api/services'
+import { errorMessage } from '../../../api/client'
+import { useSession } from '../../../context/SessionContext'
 import './SignupPage.css'
 
 type SignupForm = {
@@ -23,15 +26,18 @@ const initialForm: SignupForm = {
 
 export function SignupPage() {
   const navigate = useNavigate()
+  const { user, refresh } = useSession()
   const [form, setForm] = useState(initialForm)
   const [errors, setErrors] = useState<SignupErrors>({})
+  const [submitError, setSubmitError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   function update(key: keyof SignupForm, value: string) {
     setForm((current) => ({ ...current, [key]: value }))
     setErrors((current) => ({ ...current, [key]: undefined }))
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const nextErrors: SignupErrors = {}
     if (!form.name.trim()) nextErrors.name = '이름을 입력해 주세요.'
@@ -46,7 +52,22 @@ export function SignupPage() {
       return
     }
 
-    navigate(PATHS.clubs)
+    setSubmitting(true)
+    setSubmitError('')
+    try {
+      await authApi.onboarding({
+        name: form.name.trim(),
+        studentNumber: form.studentId.trim(),
+        department: form.department.trim(),
+        email: form.email.trim(),
+      })
+      await refresh()
+      navigate(PATHS.clubs)
+    } catch (error) {
+      setSubmitError(errorMessage(error))
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -58,9 +79,10 @@ export function SignupPage() {
             <Input label="이름" name="name" value={form.name} onChange={(event) => update('name', event.target.value)} error={errors.name} aria-invalid={Boolean(errors.name)} autoComplete="name" />
             <Input label="학번" name="studentId" value={form.studentId} onChange={(event) => update('studentId', event.target.value)} error={errors.studentId} aria-invalid={Boolean(errors.studentId)} inputMode="numeric" />
             <Input label="학과" name="department" value={form.department} onChange={(event) => update('department', event.target.value)} error={errors.department} aria-invalid={Boolean(errors.department)} />
-            <Input label="이메일" name="email" type="email" value={form.email} onChange={(event) => update('email', event.target.value)} error={errors.email} aria-invalid={Boolean(errors.email)} autoComplete="email" />
+            <Input label="이메일" name="email" type="email" value={form.email || user?.email || ''} onChange={(event) => update('email', event.target.value)} error={errors.email} aria-invalid={Boolean(errors.email)} autoComplete="email" />
           </div>
-          <div className="signup-actions"><Button type="submit">가입 완료</Button></div>
+          {submitError && <p role="alert">{submitError}</p>}
+          <div className="signup-actions"><Button type="submit" disabled={submitting}>{submitting ? '저장 중…' : '가입 완료'}</Button></div>
         </form>
       </Modal>
     </ClubBackdrop>

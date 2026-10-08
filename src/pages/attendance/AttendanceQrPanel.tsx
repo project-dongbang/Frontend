@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { AttendanceEvent } from './attendanceMock'
 import { AttendanceEventPicker } from './components/AttendanceEventPicker'
+import { errorMessage } from '../../api/client'
 
 type AttendanceQrPanelProps = {
   events: AttendanceEvent[]
@@ -8,6 +9,8 @@ type AttendanceQrPanelProps = {
   selectedEvent?: AttendanceEvent
   onEventChange: (eventId: string) => void
   refreshText: string
+  onStart?: (eventId: string) => Promise<{ session: { qrToken: string; expiresAt: string } }>
+  onEnd?: (eventId: string) => Promise<void>
 }
 
 type AttendanceSessionStatus =
@@ -21,31 +24,58 @@ export function AttendanceQrPanel({
   selectedEvent,
   onEventChange,
   refreshText,
+  onStart,
+  onEnd,
 }: AttendanceQrPanelProps) {
   const [pickerOpen, setPickerOpen] = useState(false)
 
-  const [sessionStatus, setSessionStatus] =
-    useState<AttendanceSessionStatus>('ready')
+  const [localSessionStatus, setLocalSessionStatus] = useState<AttendanceSessionStatus | null>(null)
+  const [localQrToken, setLocalQrToken] = useState('')
+  const [requestError, setRequestError] = useState('')
+  const [copied, setCopied] = useState(false)
+
+  const apiSessionStatus: AttendanceSessionStatus = selectedEvent?.sessionStatus === 'ACTIVE'
+    ? 'active'
+    : selectedEvent?.sessionStatus === 'CLOSED' || selectedEvent?.sessionStatus === 'EXPIRED' ? 'ended' : 'ready'
+  const sessionStatus = localSessionStatus ?? apiSessionStatus
+  const qrToken = localQrToken || selectedEvent?.qrToken || ''
 
   const handleEventChange = (eventId: string) => {
     onEventChange(eventId)
 
     // 다른 행사 선택 시 출석 세션 초기화
-    setSessionStatus('ready')
+    setLocalSessionStatus(null)
+    setLocalQrToken('')
   }
 
-  const handleStartAttendance = () => {
+  const handleStartAttendance = async () => {
     if (!selectedEvent) return
-
-    // TODO: 출석 시작 API 연결
-    setSessionStatus('active')
+    try {
+      const result = await onStart?.(selectedEvent.id)
+      if (result?.session.qrToken) {
+        setLocalQrToken(result.session.qrToken)
+        setLocalSessionStatus('active')
+        setRequestError('')
+      }
+    } catch (error) { setRequestError(errorMessage(error)) }
   }
 
-  const handleEndAttendance = () => {
+  const handleEndAttendance = async () => {
     if (!selectedEvent) return
+    try {
+      await onEnd?.(selectedEvent.id)
+      setLocalSessionStatus('ended')
+      setLocalQrToken('')
+      setRequestError('')
+    } catch (error) { setRequestError(errorMessage(error)) }
+  }
 
-    // TODO: 출석 종료 API 연결
-    setSessionStatus('ended')
+  const copyQrToken = async () => {
+    try {
+      await navigator.clipboard.writeText(qrToken)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1500)
+    } catch { setRequestError('체크인 코드를 복사하지 못했습니다.') }
   }
 
   const isActive = sessionStatus === 'active'
@@ -74,7 +104,7 @@ export function AttendanceQrPanel({
             : '행사를 먼저 만들어 주세요'}
         </h2>
 
-        <p>QR 코드를 스캔해 출석을 인증하세요.</p>
+        <p>출석 시작 후 표시되는 체크인 코드를 회원 화면에 입력해 출석을 인증하세요.</p>
 
         {selectedEvent && (
           <>
@@ -84,7 +114,7 @@ export function AttendanceQrPanel({
               }`}
             >
               <div className="attendance-qr-placeholder">
-                {isActive ? 'QR' : ''}
+                {isActive && <div className="attendance-checkin-token"><span>체크인 코드</span><code>{qrToken}</code><button type="button" onClick={() => void copyQrToken()}>{copied ? '복사 완료' : '코드 복사'}</button></div>}
               </div>
 
               {!isActive && (
@@ -145,6 +175,7 @@ export function AttendanceQrPanel({
             </div>
           </>
         )}
+        {requestError && <p role="alert">{requestError}</p>}
       </section>
 
       <AttendanceEventPicker

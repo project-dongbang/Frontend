@@ -10,6 +10,9 @@ export type FeesTransaction = {
   type: FeesTransactionType
   author: string
   proofText: string
+  evidenceUrl?: string
+  memo?: string
+  paymentMethod?: string
 }
 
 export const feesSummary = {
@@ -120,6 +123,7 @@ export type FeePaymentMember = {
   generation: string
   amount: number
   status: FeePaymentStatus
+  membershipId?: string
 }
 
 export const feeCollections: FeeCollection[] = [

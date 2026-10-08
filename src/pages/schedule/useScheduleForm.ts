@@ -2,6 +2,9 @@ import { useState } from 'react'
 import type { SubmitEvent } from 'react'
 
 import type { CalendarItem } from './scheduleMock'
+import { scheduleApi } from '../../api/services'
+import { errorMessage } from '../../api/client'
+import { useSession } from '../../context/SessionContext'
 
 export type ScheduleFormValues = {
   type: 'schedule' | 'event'
@@ -61,6 +64,7 @@ export function useScheduleForm(
   item: CalendarItem | null,
   onClose: () => void,
 ) {
+  const { activeOrganization } = useSession()
   const [values, setValues] =
     useState<ScheduleFormValues>(() =>
       getInitialValues(item),
@@ -88,7 +92,7 @@ export function useScheduleForm(
     onClose()
   }
 
-  const handleSubmit = (
+  const handleSubmit = async (
     event: SubmitEvent<HTMLFormElement>,
   ) => {
     event.preventDefault()
@@ -127,26 +131,27 @@ export function useScheduleForm(
       return
     }
 
-    if (isEdit) {
-      // TODO: 일정 수정 API 연결
-      console.log(
-        '수정할 일정 ID:',
-        item?.id,
-      )
-
-      console.log(
-        '수정 데이터:',
-        values,
-      )
-    } else {
-      // TODO: 일정 등록 API 연결
-      console.log(
-        '등록 데이터:',
-        values,
-      )
+    if (!activeOrganization) { setError('동아리를 먼저 선택해 주세요.'); return }
+    const body = {
+      title: values.title.trim(),
+      startsAt: new Date(values.start).toISOString(),
+      endsAt: new Date(values.end).toISOString(),
+      location: values.location.trim(),
+      description: values.description.trim() || null,
+      ...(isEdit ? {} : { type: values.type.toUpperCase() }),
+      ...(isEvent ? {
+        capacity: values.capacity ? Number(values.capacity) : null,
+        registrationDeadline: values.deadline ? new Date(values.deadline).toISOString() : null,
+      } : {}),
     }
-
-    handleClose()
+    try {
+      if (isEdit && item) await scheduleApi.update(activeOrganization.organizationId, item.id, body)
+      else await scheduleApi.create(activeOrganization.organizationId, body)
+      window.dispatchEvent(new Event('dongbang:schedule-changed'))
+      handleClose()
+    } catch (requestError) {
+      setError(errorMessage(requestError))
+    }
   }
 
   return {

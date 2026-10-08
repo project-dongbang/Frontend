@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { Button } from '../../components/common'
 import type { CalendarItem } from './scheduleMock'
+import { scheduleApi } from '../../api/services'
+import { useSession } from '../../context/SessionContext'
+import { errorMessage } from '../../api/client'
 
 type ScheduleDetailModalProps = {
   open: boolean
@@ -30,6 +33,8 @@ export function ScheduleDetailModal({
   onParticipantEditRequest,
 }: ScheduleDetailModalProps) {
   const [joined, setJoined] = useState(false)
+  const [requestError, setRequestError] = useState('')
+  const { activeOrganization } = useSession()
 
   if (!open || !item) return null
 
@@ -122,6 +127,7 @@ export function ScheduleDetailModal({
               {item.description ||
                 '추가 안내가 없습니다.'}
             </div>
+            {requestError && <p role="alert">{requestError}</p>}
 {!isMember && (
             <div className="schedule-detail-admin-actions">
   <Button
@@ -217,12 +223,19 @@ export function ScheduleDetailModal({
         disabled={
           !joined && (isClosed || isFull)
         }
-        onClick={() => {
+        onClick={async () => {
           if (!joined && (isClosed || isFull)) {
             return
           }
-
-          setJoined((prev) => !prev)
+          if (!activeOrganization) return
+          try {
+            if (joined) await scheduleApi.withdraw(activeOrganization.organizationId, item.id)
+            else await scheduleApi.apply(activeOrganization.organizationId, item.id)
+            setJoined((prev) => !prev)
+            setRequestError('')
+          } catch (error) {
+            setRequestError(errorMessage(error))
+          }
         }}
       >
         {joined

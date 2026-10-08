@@ -3,6 +3,8 @@ import type { FeesTransaction } from '../feesMock'
 type FeesDetailModalProps = {
   transaction: FeesTransaction
   onClose: () => void
+  onEdit?: () => void
+  onDelete?: () => void
 }
 
 const formatMoney = (value: number) =>
@@ -11,6 +13,8 @@ const formatMoney = (value: number) =>
 export function FeesDetailModal({
   transaction,
   onClose,
+  onEdit,
+  onDelete,
 }: FeesDetailModalProps) {
   return (
     <div
@@ -108,6 +112,8 @@ export function FeesDetailModal({
         </div>
 
         <footer className="fees-ledger-modal-footer">
+          {onEdit && <button type="button" className="fees-ledger-close-button" onClick={onEdit}>수정</button>}
+          {onDelete && <button type="button" className="fees-ledger-close-button" onClick={onDelete}>삭제</button>}
           <button
             type="button"
             className="fees-ledger-close-button"

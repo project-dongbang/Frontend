@@ -7,6 +7,7 @@ export type AttendanceMember = {
   generation: string
   status: AttendanceStatus
   checkedAt: string | null
+  version?: number
 }
 
 export type AttendanceEvent = {
@@ -14,6 +15,8 @@ export type AttendanceEvent = {
   title: string
   start: string
   location: string
+  sessionStatus?: 'ACTIVE' | 'EXPIRED' | 'CLOSED' | 'NOT_STARTED'
+  qrToken?: string
 }
 
 export const attendanceEvents: AttendanceEvent[] = [
