@@ -1,38 +1,59 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button, Input } from '../../components/common'
 import { ClubBackdrop } from './ClubBackdrop'
 import { useClubDialog } from './useClubDialog'
 import './ClubPage.css'
 import { organizationApi } from '../../api/services'
-import { errorMessage } from '../../api/client'
+import { ApiError, errorMessage } from '../../api/client'
 import { useSession } from '../../context/SessionContext'
+import { PATHS } from '../../routes/paths'
+import { clearAuthReturnPath, saveAuthReturnPath } from '../../routes/authReturn'
 
 export function ClubJoinPage() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
-  const { refresh, setActiveOrganizationId } = useSession()
+  const { user, loading, refresh, setActiveOrganizationId } = useSession()
   const [token, setToken] = useState(params.get('invite') ?? '')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const close = () => navigate('/clubs')
+  const close = () => { clearAuthReturnPath(); navigate(PATHS.clubs) }
   const { dialogRef, handleBackdropMouseDown } =
     useClubDialog<HTMLFormElement>({ onClose: close })
 
+  useEffect(() => {
+    if (loading) return
+    if (!user || user.onboardingRequired) {
+      if (token.trim()) saveAuthReturnPath(`${PATHS.joinClub}?invite=${encodeURIComponent(token.trim())}`)
+      navigate(user ? PATHS.signup : PATHS.login, { replace: true })
+    }
+  }, [loading, navigate, token, user])
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (!user || user.onboardingRequired) return
     setSubmitting(true)
     setError('')
     try {
       const joined = await organizationApi.join(token.trim())
+      clearAuthReturnPath()
       setActiveOrganizationId(joined.organizationId)
       await refresh()
       navigate('/dashboard?role=member')
     } catch (requestError) {
+      if (requestError instanceof ApiError && requestError.status === 401) {
+        saveAuthReturnPath(`${PATHS.joinClub}?invite=${encodeURIComponent(token.trim())}`)
+        navigate(PATHS.login, { replace: true })
+        return
+      }
       setError(errorMessage(requestError))
     } finally {
       setSubmitting(false)
     }
+  }
+
+  if (loading || !user || user.onboardingRequired) {
+    return <main className="login-page"><p role="status">로그인 정보를 확인하고 있어요…</p></main>
   }
 
   return (

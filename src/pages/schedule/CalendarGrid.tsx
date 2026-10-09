@@ -60,8 +60,8 @@ export function CalendarGrid({
 
         const dayItems = items.filter(
           (item) =>
-            item.start.slice(0, 10) <= dateKey &&
-            item.end.slice(0, 10) >= dateKey,
+            item.start.slice(0, 10) === dateKey ||
+            item.end.slice(0, 10) === dateKey,
         )
 
         return (
@@ -78,10 +78,10 @@ export function CalendarGrid({
             {dayItems.map((item) => {
               const isStartDay =
                 item.start.slice(0, 10) === dateKey
-
-              const time = isStartDay
-                ? item.start.slice(11, 16)
-                : '진행 중'
+              const isEndDay = item.end.slice(0, 10) === dateKey
+              const time = isStartDay && isEndDay
+                ? `${item.start.slice(11, 16)}–${item.end.slice(11, 16)}`
+                : isStartDay ? `시작 ${item.start.slice(11, 16)}` : `종료 ${item.end.slice(11, 16)}`
 
               return (
                 <button

@@ -177,7 +177,7 @@ export function GalleryPage() {
           <h1>사진첩</h1>
           <p>동아리 활동의 순간을 함께 기록해요.</p>
         </div>
-        {canManage && <Button onClick={openCreate} disabled={loadingPhotos}>사진 추가</Button>}
+        {canManage && <Button className="page-header-action" onClick={openCreate} disabled={loadingPhotos}>사진 추가</Button>}
       </header>
       {requestError && <div className="gallery-request-error" role="alert">
         <span>{requestError}</span>

@@ -5,6 +5,7 @@ import { AuthCallbackPage } from './pages/auth/AuthCallbackPage'
 import { DashboardPage } from './pages/dashboard/DashboardPage'
 import { SchedulePage } from './pages/schedule/SchedulePage'
 import { AttendancePage } from './pages/attendance/AttendancePage'
+import { AttendanceCheckInPage } from './pages/attendance/AttendanceCheckInPage'
 import { ClubCreatePage } from './pages/clubs/ClubCreatePage'
 import { ClubJoinPage } from './pages/clubs/ClubJoinPage'
 import { ClubSelectionPage } from './pages/clubs/ClubSelectionPage'
@@ -26,6 +27,7 @@ function App() {
 
       <Route path={PATHS.calendar} element={<SchedulePage />} />
       <Route path={PATHS.attendance} element={<AttendancePage />} />
+      <Route path={PATHS.attendanceCheckIn} element={<AttendanceCheckInPage />} />
       <Route path={PATHS.fees} element={<FeesPage />} />
       <Route path={PATHS.clubs} element={<ClubSelectionPage />} />
       <Route path={PATHS.createClub} element={<ClubCreatePage />} />
