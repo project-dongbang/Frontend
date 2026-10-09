@@ -1,32 +1,19 @@
-import { after, before, test } from 'node:test'
+import { before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { createServer } from 'vite'
+import { loadSsrModules } from './loadSsrModules.mjs'
 
-let server
 let FeeItemModal
 let feeCollections
 
 before(async () => {
-  server = await createServer({
-    server: { middlewareMode: true, watch: null },
-    appType: 'custom',
+  const modules = await loadSsrModules('fees', {
+    FeeItemModal: 'src/pages/fees/components/FeeItemModal.tsx',
+    feesMock: 'src/pages/fees/feesMock.ts',
   })
-  FeeItemModal = (
-    await server.ssrLoadModule(
-      '/src/pages/fees/components/FeeItemModal.tsx',
-    )
-  ).FeeItemModal
-  feeCollections = (
-    await server.ssrLoadModule(
-      '/src/pages/fees/feesMock.ts',
-    )
-  ).feeCollections
-})
-
-after(async () => {
-  await server?.close()
+  FeeItemModal = modules.FeeItemModal.FeeItemModal
+  feeCollections = modules.feesMock.feeCollections
 })
 
 const modalProps = {

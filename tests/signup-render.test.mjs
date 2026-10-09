@@ -1,20 +1,14 @@
-import { after, before, test } from 'node:test'
+import { before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
-import { createServer } from 'vite'
+import { loadSsrModules } from './loadSsrModules.mjs'
 
-let server
 let App
 
 before(async () => {
-  server = await createServer({ server: { middlewareMode: true, watch: null }, appType: 'custom' })
-  App = (await server.ssrLoadModule('/src/App.tsx')).default
-})
-
-after(async () => {
-  await server?.close()
+  App = (await loadSsrModules('auth', { App: 'src/App.tsx' })).App.default
 })
 
 function renderPath(path) {

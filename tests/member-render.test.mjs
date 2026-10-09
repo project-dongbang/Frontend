@@ -3,27 +3,30 @@ import assert from 'node:assert/strict'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
-import { createServer } from 'vite'
+import { loadSsrModules } from './loadSsrModules.mjs'
 
-let server
 let App
 let MemberFormModal
 let MemberRoleModal
 let membersMock
 
 before(async () => {
-  server = await createServer({ server: { middlewareMode: true, watch: null }, appType: 'custom' })
-  App = (await server.ssrLoadModule('/src/App.tsx')).default
-  MemberFormModal = (await server.ssrLoadModule('/src/pages/members/MemberFormModal.tsx')).MemberFormModal
-  MemberRoleModal = (await server.ssrLoadModule('/src/pages/members/MemberRoleModal.tsx')).MemberRoleModal
-  membersMock = (await server.ssrLoadModule('/src/pages/members/membersMock.ts')).membersMock
+  const modules = await loadSsrModules('members', {
+    App: 'src/App.tsx',
+    MemberFormModal: 'src/pages/members/MemberFormModal.tsx',
+    MemberRoleModal: 'src/pages/members/MemberRoleModal.tsx',
+    membersMock: 'src/pages/members/membersMock.ts',
+  })
+  App = modules.App.default
+  MemberFormModal = modules.MemberFormModal.MemberFormModal
+  MemberRoleModal = modules.MemberRoleModal.MemberRoleModal
+  membersMock = modules.membersMock.membersMock
   // Only the invitation's origin is needed for server-side rendering; no browser is launched.
   globalThis.window = { location: { origin: 'https://dongbang.example' } }
 })
 
 after(async () => {
   delete globalThis.window
-  await server?.close()
 })
 
 function renderPath(path) {

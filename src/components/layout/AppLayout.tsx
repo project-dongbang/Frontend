@@ -144,7 +144,7 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
       return
     }
 
-    navigate('/clubs/dlog/settings')
+    navigate(activeOrganization ? `/clubs/${activeOrganization.organizationId}/settings` : '/clubs')
   }
 
   return (
