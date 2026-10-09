@@ -44,15 +44,16 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   min-height: 42px;
-  padding: 0 16px;
+  padding: 0 18px 0 14px;
   border: 1px solid #214a6b;
   border-radius: 11px;
   background: #214a6b;
   color: #ffffff;
   font-size: 13px;
   font-weight: 700;
+  line-height: 1.2;
   cursor: pointer;
 }
 
@@ -60,15 +61,6 @@
   background: #17364f;
 }
 
-.schedule-create-button span {
-  display: grid;
-  width: 17px;
-  height: 17px;
-  flex: 0 0 17px;
-  place-items: center;
-  font-size: 18px;
-  line-height: 1;
-}
 
 /* 카드 */
 .calendar-card {
@@ -209,6 +201,7 @@
   .schedule-create-button {
     width: 100%;
   }
+
 
   .calendar-card {
     padding: 15px 9px;

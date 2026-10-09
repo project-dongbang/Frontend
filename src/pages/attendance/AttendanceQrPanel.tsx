@@ -1,9 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import QRCode from 'qrcode'
 import type { AttendanceEvent } from './attendanceMock'
 import { AttendanceEventPicker } from './components/AttendanceEventPicker'
 import { errorMessage } from '../../api/client'
+import { checkInPath } from './checkInLink'
 
 type AttendanceQrPanelProps = {
+  organizationId: number | null
   events: AttendanceEvent[]
   selectedEventId: string
   selectedEvent?: AttendanceEvent
@@ -19,6 +22,7 @@ type AttendanceSessionStatus =
   | 'ended'
 
 export function AttendanceQrPanel({
+  organizationId,
   events,
   selectedEventId,
   selectedEvent,
@@ -33,12 +37,25 @@ export function AttendanceQrPanel({
   const [localQrToken, setLocalQrToken] = useState('')
   const [requestError, setRequestError] = useState('')
   const [copied, setCopied] = useState(false)
+  const [qrImage, setQrImage] = useState({ url: '', data: '' })
 
   const apiSessionStatus: AttendanceSessionStatus = selectedEvent?.sessionStatus === 'ACTIVE'
     ? 'active'
     : selectedEvent?.sessionStatus === 'CLOSED' || selectedEvent?.sessionStatus === 'EXPIRED' ? 'ended' : 'ready'
   const sessionStatus = localSessionStatus ?? apiSessionStatus
   const qrToken = localQrToken || selectedEvent?.qrToken || ''
+  const checkInUrl = organizationId && selectedEvent && qrToken && typeof window !== 'undefined'
+    ? `${window.location.origin}${checkInPath(organizationId, selectedEvent.id, qrToken)}`
+    : ''
+
+  useEffect(() => {
+    let cancelled = false
+    if (!checkInUrl) return
+    void QRCode.toDataURL(checkInUrl, { width: 320, margin: 2, errorCorrectionLevel: 'M' })
+      .then((dataUrl) => { if (!cancelled) setQrImage({ url: checkInUrl, data: dataUrl }) })
+      .catch(() => { if (!cancelled) setRequestError('QR 이미지를 만들지 못했습니다. 체크인 코드를 이용해 주세요.') })
+    return () => { cancelled = true }
+  }, [checkInUrl])
 
   const handleEventChange = (eventId: string) => {
     onEventChange(eventId)
@@ -104,7 +121,7 @@ export function AttendanceQrPanel({
             : '행사를 먼저 만들어 주세요'}
         </h2>
 
-        <p>출석 시작 후 표시되는 체크인 코드를 회원 화면에 입력해 출석을 인증하세요.</p>
+        <p>출석 시작 후 QR을 스캔하거나 체크인 코드를 입력해 출석을 인증하세요.</p>
 
         {selectedEvent && (
           <>
@@ -114,7 +131,7 @@ export function AttendanceQrPanel({
               }`}
             >
               <div className="attendance-qr-placeholder">
-                {isActive && <div className="attendance-checkin-token"><span>체크인 코드</span><code>{qrToken}</code><button type="button" onClick={() => void copyQrToken()}>{copied ? '복사 완료' : '코드 복사'}</button></div>}
+                {isActive && qrImage.url === checkInUrl && qrImage.data && <img className="attendance-qr-image" src={qrImage.data} alt="스캔하여 출석하는 QR 코드" />}
               </div>
 
               {!isActive && (
@@ -125,6 +142,8 @@ export function AttendanceQrPanel({
                 </div>
               )}
             </div>
+
+            {isActive && qrToken && <div className="attendance-checkin-token"><span>직접 입력용 체크인 코드</span><code>{qrToken}</code><button type="button" onClick={() => void copyQrToken()}>{copied ? '복사 완료' : '코드 복사'}</button></div>}
 
             <div className="attendance-qr-time">
               {isActive

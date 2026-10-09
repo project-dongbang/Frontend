@@ -32,9 +32,10 @@ const initialValues: ScheduleFormValues = {
 
 function getInitialValues(
   item: CalendarItem | null,
+  defaultType: ScheduleFormValues['type'],
 ): ScheduleFormValues {
   if (!item) {
-    return initialValues
+    return { ...initialValues, type: defaultType }
   }
 
   return {
@@ -63,11 +64,12 @@ function getInitialValues(
 export function useScheduleForm(
   item: CalendarItem | null,
   onClose: () => void,
+  defaultType: ScheduleFormValues['type'] = 'schedule',
 ) {
   const { activeOrganization } = useSession()
   const [values, setValues] =
     useState<ScheduleFormValues>(() =>
-      getInitialValues(item),
+      getInitialValues(item, defaultType),
     )
 
   const [error, setError] = useState('')

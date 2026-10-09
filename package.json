@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
+    "qrcode": "^1.5.4",
     "react": "latest",
     "react-dom": "latest",
     "react-router-dom": "^7.18.3",
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "@eslint/js": "latest",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "eslint": "latest",

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useSession } from '../../context/SessionContext'
 import { PATHS } from '../../routes/paths'
 import { authApi } from '../../api/services'
+import { getAuthReturnPath } from '../../routes/authReturn'
 
 export function AuthCallbackPage() {
   const navigate = useNavigate()
@@ -12,7 +13,7 @@ export function AuthCallbackPage() {
     void refresh().then(async () => {
       try {
         const user = await authApi.me()
-        navigate(user.onboardingRequired ? PATHS.signup : PATHS.clubs, { replace: true })
+        navigate(user.onboardingRequired ? PATHS.signup : getAuthReturnPath(), { replace: true })
       } catch {
         navigate(PATHS.login, { replace: true })
       }

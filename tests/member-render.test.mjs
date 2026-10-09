@@ -10,6 +10,8 @@ let App
 let MemberFormModal
 let MemberRoleModal
 let membersMock
+let authReturn
+let checkInLink
 
 before(async () => {
   server = createRenderLoader()
@@ -17,6 +19,8 @@ before(async () => {
   MemberFormModal = (await server.ssrLoadModule('/src/pages/members/MemberFormModal.tsx')).MemberFormModal
   MemberRoleModal = (await server.ssrLoadModule('/src/pages/members/MemberRoleModal.tsx')).MemberRoleModal
   membersMock = (await server.ssrLoadModule('/src/pages/members/membersMock.ts')).membersMock
+  authReturn = await server.ssrLoadModule('/src/routes/authReturn.ts')
+  checkInLink = await server.ssrLoadModule('/src/pages/attendance/checkInLink.ts')
   // Only the invitation's origin is needed for server-side rendering; no browser is launched.
   globalThis.window = { location: { origin: 'https://dongbang.example' } }
 })
@@ -52,10 +56,34 @@ test('the invitation dialog does not invent a code before the API responds', () 
   assert.doesNotMatch(html, /멤버 직접 등록/)
 })
 
-test('the join route prefills the shared invitation code', () => {
+test('the join route waits for authentication before offering invitation acceptance', () => {
   const html = renderPath('/clubs/join?invite=DB-DLOG')
-  assert.match(html, /value="DB-DLOG"/)
-  assert.match(html, /required=""/)
+  assert.match(html, /로그인 정보를 확인하고 있어요/)
+  assert.doesNotMatch(html, /동아리 확인/)
+})
+
+test('an invitation remains available after the OAuth redirect', () => {
+  const values = new Map()
+  window.sessionStorage = {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value),
+    removeItem: (key) => values.delete(key),
+  }
+  authReturn.saveAuthReturnPath('/clubs/join?invite=code%2Fwith%20space')
+  assert.equal(authReturn.getAuthReturnPath(), '/clubs/join?invite=code%2Fwith%20space')
+  authReturn.clearAuthReturnPath()
+  assert.equal(authReturn.getAuthReturnPath(), '/clubs')
+})
+
+test('a QR check-in destination survives login with its token intact', () => {
+  const path = checkInLink.checkInPath(4, 9, 'token/+ space')
+  authReturn.saveAuthReturnPath(path)
+  assert.equal(authReturn.getAuthReturnPath(), path)
+  assert.deepEqual(checkInLink.parseCheckInParams(new URLSearchParams(path.split('?')[1])), {
+    organizationId: 4, eventId: 9, qrToken: 'token/+ space',
+  })
+  assert.match(renderPath(path), /출석 정보를 확인하고 있어요/)
+  authReturn.clearAuthReturnPath()
 })
 
 test('member information editing exposes only fields supported by the deployed API', () => {

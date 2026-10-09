@@ -1,6 +1,6 @@
 .fees-page {
   width: 100%;
-  max-width: 1180px;
+  max-width: 100%;
   margin: 0 auto;
 }
 
@@ -65,7 +65,7 @@
   font-family: inherit;
   font-size: 13px;
   font-weight: 700;
-  line-height: 1;
+  line-height: 1.2;
   white-space: nowrap;
   cursor: pointer;
 }
@@ -93,15 +93,10 @@
   background: var(--color-bg-brand-strong);
 }
 
-.fees-page-actions .fees-primary-btn > span[aria-hidden='true'] {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 17px;
-  height: 17px;
-  font-size: 18px;
-  font-weight: 400;
-  line-height: 17px;
+.fees-page-actions .page-header-action-with-icon {
+  gap: 6px;
+  padding-left: 14px;
+  padding-right: 18px;
 }
 
 .fees-summary {
@@ -284,8 +279,12 @@
 
   .fees-page-actions {
     width: 100%;
-    justify-content: flex-start;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .fees-page-actions .page-header-action { width: 100%; min-width: 0; }
+  .fees-page-actions .fees-primary-btn { grid-column: 1 / -1; }
 
   .fees-card-head {
     align-items: flex-start;
@@ -293,6 +292,11 @@
     padding-block: 16px;
     flex-direction: column;
   }
+}
+
+@media (max-width: 420px) {
+  .fees-page-actions { grid-template-columns: 1fr; }
+  .fees-page-actions .fees-primary-btn { grid-column: auto; }
 }
 
 .fees-ledger-scroll {

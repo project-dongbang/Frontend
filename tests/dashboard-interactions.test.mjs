@@ -7,10 +7,14 @@ import { createRenderLoader } from './render-loader.mjs'
 
 let server
 let App
+let CalendarGrid
+let calendarLocalDateTime
 
 before(async () => {
   server = createRenderLoader()
   App = (await server.ssrLoadModule('/src/App.tsx')).default
+  CalendarGrid = (await server.ssrLoadModule('/src/pages/schedule/CalendarGrid.tsx')).CalendarGrid
+  calendarLocalDateTime = (await server.ssrLoadModule('/src/pages/schedule/calendarDate.ts')).calendarLocalDateTime
 })
 
 after(async () => {
@@ -63,6 +67,21 @@ test('dashboard creation deep links open their target dialogs', () => {
   assert.match(fees, /납부 항목 등록/)
   assert.match(schedule, /role="dialog"/)
   assert.match(schedule, /일정 등록/)
+  const event = renderPath('/calendar?dialog=event-create')
+  assert.match(event, /role="dialog"/)
+  assert.match(event, /행사 만들기/)
+})
+
+test('the calendar shows a multiday item only on its start and end dates', () => {
+  const html = renderToStaticMarkup(createElement(CalendarGrid, {
+    year: 2026, month: 9,
+    items: [{ id: '1', title: '장기 행사', type: 'event', start: '2026-10-09T14:54', end: '2026-10-17T17:00' }],
+    onItemClick() {},
+  }))
+  assert.equal((html.match(/장기 행사/g) ?? []).length, 2)
+  assert.match(html, /시작 14:54 장기 행사/)
+  assert.match(html, /종료 17:00 장기 행사/)
+  assert.equal(calendarLocalDateTime('2026-10-09T05:54:00Z'), '2026-10-09T14:54')
 })
 
 test('the club chooser renders without a fictitious member identity', () => {
@@ -74,12 +93,12 @@ test('the club chooser renders without a fictitious member identity', () => {
   assert.match(html, /aria-label="닫기"/)
 })
 
-test('club creation and join overlays expose accessible dialogs', () => {
+test('club creation opens a dialog while invitation acceptance waits for authentication', () => {
   const create = renderPath('/clubs/new')
   const join = renderPath('/clubs/join')
 
   assert.match(create, /role="dialog"/)
   assert.match(create, /aria-labelledby="club-create-title"/)
-  assert.match(join, /role="dialog"/)
-  assert.match(join, /aria-labelledby="club-join-title"/)
+  assert.match(join, /로그인 정보를 확인하고 있어요/)
+  assert.doesNotMatch(join, /role="dialog"/)
 })

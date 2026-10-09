@@ -177,6 +177,7 @@ const handleDownload = () => {
         <div className="attendance-layout">
           <AttendanceQrPanel
             key={selectedEventId}
+            organizationId={activeOrganization?.organizationId ?? null}
             events={currentEvents}
             selectedEventId={selectedEventId}
             selectedEvent={selectedEvent}

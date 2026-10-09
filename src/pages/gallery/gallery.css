@@ -4,12 +4,13 @@
 /* GAL001 · GAL002 list-screen alignment */
 .gallery-integration-note { margin: -8px 0 18px; color: #66717e; font-size: 12px; line-height: 1.5; }
 .gallery-page {
-  width: min(948px, 100%);
+  width: 100%;
+  max-width: 100%;
 }
 
 .gallery-header {
   min-height: 84px;
-  align-items: flex-end;
+  align-items: center;
   box-sizing: border-box;
   margin-bottom: 22px;
 }
@@ -19,6 +20,7 @@
   padding-inline: 16px;
   border-radius: 11px;
   font-size: 13px;
+  line-height: 1.2;
 }
 
 .gallery-load-more {
@@ -101,6 +103,8 @@
     min-height: auto;
     align-items: flex-start;
   }
+
+  .gallery-header .page-header-action { width: 100%; }
 
   .gallery-thumbnail {
     height: 145px;

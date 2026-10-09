@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ApiMemberFeesPage } from './ApiMemberFeesPage'
 import { DashboardShell } from '../dashboard/DashboardShell'
+import addIcon from '../../assets/dashboard-add.svg'
 import { ExpenseCreateModal } from './components/ExpenseCreateModal'
 import { FeeItemModal } from './components/FeeItemModal'
 import { IncomeCreateModal } from './components/IncomeCreateModal'
@@ -284,12 +285,12 @@ export function FeesPage() {
 
             <button
               type="button"
-              className="page-header-action fees-primary-btn"
+              className="page-header-action page-header-action-with-icon fees-primary-btn"
               onClick={() =>
                 setExpenseModalOpen(true)
               }
             >
-              <span aria-hidden="true">＋</span>
+              <img src={addIcon} alt="" />
               출금 내역 등록
             </button>
           </div>

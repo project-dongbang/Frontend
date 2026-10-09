@@ -97,16 +97,14 @@ export function ClubSettingsPage() {
 
   if (!canManage) return <ClubShell>
     <header className="club-settings-header">
-      <span className="eyebrow">CLUB SETTINGS</span>
-      <h1>동아리 설정</h1>
+      <div><span className="eyebrow">CLUB SETTINGS</span><h1>동아리 설정</h1><p>우리 동아리의 기본 정보와 운영 기준을 관리해요.</p></div>
     </header>
     <Card><p>동아리 설정은 대표와 운영진만 수정할 수 있습니다.</p></Card>
   </ClubShell>
 
   if (loadedOrganizationId !== activeOrganization?.organizationId) return <ClubShell>
     <header className="club-settings-header">
-      <span className="eyebrow">CLUB SETTINGS</span>
-      <h1>동아리 설정</h1>
+      <div><span className="eyebrow">CLUB SETTINGS</span><h1>동아리 설정</h1><p>우리 동아리의 기본 정보와 운영 기준을 관리해요.</p></div>
     </header>
     <Card>
       {requestError ? <>
@@ -119,9 +117,7 @@ export function ClubSettingsPage() {
   return (
     <ClubShell>
       <header className="club-settings-header">
-        <span className="eyebrow">CLUB SETTINGS</span>
-        <h1>동아리 설정</h1>
-        <p>우리 동아리의 기본 정보와 운영 기준을 관리해요.</p>
+        <div><span className="eyebrow">CLUB SETTINGS</span><h1>동아리 설정</h1><p>우리 동아리의 기본 정보와 운영 기준을 관리해요.</p></div>
       </header>
       <form className="club-settings-form" onSubmit={handleSubmit}>
         <div className="club-settings-layout">

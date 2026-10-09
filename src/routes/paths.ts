@@ -12,6 +12,7 @@ export const PATHS = {
   calendar: '/calendar',
   events: '/events',
   attendance: '/attendance',
+  attendanceCheckIn: '/attendance/check-in',
   fees: '/fees',
   notifications: '/notifications',
   profile: '/profile',

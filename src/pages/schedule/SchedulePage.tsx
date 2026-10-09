@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { DashboardShell } from '../dashboard/DashboardShell'
+import addIcon from '../../assets/dashboard-add.svg'
 import { CalendarGrid } from './CalendarGrid'
+import { calendarLocalDateTime } from './calendarDate'
 import type { CalendarItem } from './scheduleMock'
 import { ScheduleFormModal } from './ScheduleFormModal'
 import { ScheduleDetailModal } from './ScheduleDetailModal'
@@ -23,12 +25,13 @@ const isMember = activeOrganization?.myRole === 'MEMBER'
 
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
+  const [createType, setCreateType] = useState<'schedule' | 'event'>(() => searchParams.get('dialog') === 'event-create' ? 'event' : 'schedule')
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(
-    () => searchParams.get('dialog') === 'schedule-create',
+    () => ['schedule-create', 'event-create'].includes(searchParams.get('dialog') ?? ''),
   )
   const closeCreateModal = () => {
     setIsCreateModalOpen(false)
-    if (searchParams.get('dialog') === 'schedule-create') {
+    if (['schedule-create', 'event-create'].includes(searchParams.get('dialog') ?? '')) {
       const nextParams = new URLSearchParams(searchParams)
       nextParams.delete('dialog')
       setSearchParams(nextParams, { replace: true })
@@ -51,8 +54,8 @@ const [deletingItem, setDeletingItem] =
         id: String(event.eventId ?? event.feeItemId),
         title: event.title,
         type: event.type === 'EVENT' ? 'event' : event.type === 'FEE_DUE' ? 'fee' : 'schedule',
-        start: (event.startsAt ?? `${event.dueDate}T23:59`).slice(0, 16),
-        end: (event.endsAt ?? event.startsAt ?? `${event.dueDate}T23:59`).slice(0, 16),
+        start: event.startsAt ? calendarLocalDateTime(event.startsAt) : `${event.dueDate}T23:59`,
+        end: event.endsAt ? calendarLocalDateTime(event.endsAt) : event.startsAt ? calendarLocalDateTime(event.startsAt) : `${event.dueDate}T23:59`,
       })))
       setLoadError('')
     } catch (requestError) { setLoadError(errorMessage(requestError)) }
@@ -117,16 +120,9 @@ const handleParticipantEditRequest = (
               동아리 일정과 참가 신청을 한곳에서 관리해요.
             </p>
           </div>
-          {!isMember && (
-          <button
-            type="button"
-            className="page-header-action schedule-create-button"
-            onClick={() => setIsCreateModalOpen(true)}
-          >
-            <span>＋</span>
-            일정 등록
-          </button>
-         )}
+          {!isMember && <button type="button" className="page-header-action page-header-action-with-icon schedule-create-button" onClick={() => { setCreateType('schedule'); setIsCreateModalOpen(true) }}>
+            <img src={addIcon} alt="" />일정·행사 등록
+          </button>}
         </div>
 
         {loadError && <p role="alert">{loadError}</p>}
@@ -178,8 +174,9 @@ const handleParticipantEditRequest = (
   }
 />
       <ScheduleFormModal
-        key={isCreateModalOpen ? 'create-open' : 'create-closed'}
+        key={isCreateModalOpen ? `create-${createType}` : 'create-closed'}
         open={isCreateModalOpen}
+        defaultType={createType}
         onClose={closeCreateModal}
       />
       <ScheduleFormModal

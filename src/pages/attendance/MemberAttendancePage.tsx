@@ -42,15 +42,11 @@ export function MemberAttendancePage() {
     <DashboardShell role="member">
       <section className="member-attendance-page">
         <header className="member-attendance-head">
-          <div className="attendance-eyebrow">
-            LIVE ATTENDANCE
+          <div>
+            <div className="attendance-eyebrow">LIVE ATTENDANCE</div>
+            <h1>내 출석</h1>
+            <p>행사별 참가자의 출석 상태를 확인하고 관리해요.</p>
           </div>
-
-          <h1>내 출석</h1>
-
-          <p>
-            행사별 참가자의 출석 상태를 확인하고 관리해요.
-          </p>
         </header>
 
         <section className="member-attendance-card">

@@ -4,7 +4,7 @@
 
 .attendance-page {
   width: 100%;
-  max-width: 1180px;
+  max-width: 100%;
   margin: 0 auto;
 }
 
@@ -254,6 +254,13 @@
 .attendance-checkin-token span { color: #526573; font-size: 12px; font-weight: 700; }
 .attendance-checkin-token code { max-width: 100%; overflow-wrap: anywhere; color: #17364f; font-size: 11px; line-height: 1.4; }
 .attendance-checkin-token button { padding: 6px 10px; border: 0; border-radius: 7px; color: white; background: #214a6b; cursor: pointer; font-size: 12px; }
+.attendance-qr-image { display: block; width: 100%; height: 100%; object-fit: contain; background: white; }
+.attendance-qr-panel > .attendance-checkin-token { max-width: 260px; margin: 0 auto 16px; border: 1px solid var(--color-border-default); }
+.attendance-checkin-page { display: grid; min-height: 100vh; padding: 24px; place-items: center; background: #f5f7f9; }
+.attendance-checkin-card { width: min(100%, 420px); padding: 32px; border: 1px solid var(--color-border-default); border-radius: 18px; background: white; text-align: center; }
+.attendance-checkin-card h1 { margin: 12px 0; color: var(--color-text-primary); font-size: 28px; }
+.attendance-checkin-card p { color: var(--color-text-secondary); line-height: 1.6; }
+.attendance-checkin-card a { display: inline-flex; min-height: 42px; margin-top: 18px; padding: 0 16px; align-items: center; border-radius: 9px; color: white; background: var(--color-bg-brand); font-weight: 700; text-decoration: none; }
 
 .attendance-qr-time {
   display: flex;
@@ -837,7 +844,7 @@
 
 .member-attendance-page {
   width: 100%;
-  max-width: 1180px;
+  max-width: 100%;
   margin: 0 auto;
 }
 

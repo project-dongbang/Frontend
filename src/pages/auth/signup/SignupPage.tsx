@@ -7,6 +7,7 @@ import { authApi } from '../../../api/services'
 import { errorMessage } from '../../../api/client'
 import { useSession } from '../../../context/SessionContext'
 import './SignupPage.css'
+import { getAuthReturnPath } from '../../../routes/authReturn'
 
 type SignupForm = {
   name: string
@@ -63,7 +64,7 @@ export function SignupPage() {
         email,
       })
       await refresh()
-      navigate(PATHS.clubs)
+      navigate(getAuthReturnPath())
     } catch (error) {
       setSubmitError(errorMessage(error))
     } finally {

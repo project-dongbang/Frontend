@@ -8,12 +8,14 @@ type ScheduleFormModalProps = {
   open: boolean
   onClose: () => void
   item?: CalendarItem | null
+  defaultType?: 'schedule' | 'event'
 }
 
 export function ScheduleFormModal({
   open,
   onClose,
   item = null,
+  defaultType = 'schedule',
 }: ScheduleFormModalProps) {
   const {
     values,
@@ -22,7 +24,7 @@ export function ScheduleFormModal({
     isEdit,
     updateField,
     handleSubmit,
-  } = useScheduleForm(item, onClose)
+  } = useScheduleForm(item, onClose, defaultType)
 
   if (!open) return null
 
