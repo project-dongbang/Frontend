@@ -14,10 +14,6 @@ import {
 import { FeesSummary } from './components/FeesSummary'
 
 import {
-  feeCollections,
-  feePaymentMembers,
-  feesSummary,
-  feesTransactions,
   type FeeCollection,
   type FeeCollectionDraft,
 } from './feesMock'
@@ -31,25 +27,24 @@ import type { FeesTransaction, FeePaymentMember } from './feesMock'
 export function FeesPage() {
   const { activeOrganization } = useSession()
   const [searchParams, setSearchParams] = useSearchParams()
-  const role = searchParams.get('role')
   const [activeTab, setActiveTab] =
     useState<FeesTab>('ledger')
 
   const [paymentMembers, setPaymentMembers] =
-    useState(feePaymentMembers)
+    useState<FeePaymentMember[]>([])
   const [collections, setCollections] =
-    useState(feeCollections)
-  const [transactions, setTransactions] = useState<FeesTransaction[]>(feesTransactions)
-  const [availableMembers, setAvailableMembers] = useState<FeePaymentMember[]>(feePaymentMembers)
+    useState<FeeCollection[]>([])
+  const [transactions, setTransactions] = useState<FeesTransaction[]>([])
+  const [availableMembers, setAvailableMembers] = useState<FeePaymentMember[]>([])
   const [requestError, setRequestError] = useState('')
-  const [ledgerSummary, setLedgerSummary] = useState({ balance: feesSummary.balance, expense: feesSummary.semesterExpense })
+  const [ledgerSummary, setLedgerSummary] = useState({ balance: 0, expense: 0, expenseCount: 0 })
 
   const [paymentSummary, setPaymentSummary] = useState({
-    feeItemId: 21,
-    targetCount: 64,
-    paidCount: 58,
-    unpaidCount: 6,
-    paymentRate: 90.6,
+    feeItemId: 0,
+    targetCount: 0,
+    paidCount: 0,
+    unpaidCount: 0,
+    paymentRate: 0,
   })
 
   const [feeItemModalOpen, setFeeItemModalOpen] =
@@ -67,7 +62,7 @@ export function FeesPage() {
     setTransactions([])
     setAvailableMembers([])
     setPaymentMembers([])
-    setLedgerSummary({ balance: 0, expense: 0 })
+    setLedgerSummary({ balance: 0, expense: 0, expenseCount: 0 })
     setPaymentSummary({ feeItemId: 0, targetCount: 0, paidCount: 0, unpaidCount: 0, paymentRate: 0 })
     try {
       const [ledgerRaw, itemsRaw, memberRaw] = await Promise.all([
@@ -90,22 +85,24 @@ export function FeesPage() {
       }))
       setTransactions(mappedTransactions)
       const summary = ledger.summary ?? {}
+      const period = summary.period as { expenseCount?: number; expenseAmount?: number } | undefined
       const incomeTotal = Number(summary.totalIncome ?? summary.income ?? summary.incomeAmount ?? 0)
       const expenseTotal = Number(summary.totalExpense ?? summary.expense ?? summary.expenseAmount ?? 0)
-      setLedgerSummary({ balance: Number(summary.balance ?? summary.currentBalance ?? (incomeTotal - expenseTotal)), expense: expenseTotal })
+      setLedgerSummary({ balance: Number(summary.balance ?? summary.currentBalance ?? (incomeTotal - expenseTotal)), expense: Number(period?.expenseAmount ?? expenseTotal), expenseCount: Number(period?.expenseCount ?? 0) })
       const mappedCollections: FeeCollection[] = (items.content ?? []).map((item) => ({
         id: String(item.feeItemId), title: String(item.title ?? ''), dueDate: String(item.dueDate ?? '').replaceAll('-', '.'), description: '', bank: '', accountNumber: '', accountHolder: '', categories: [],
       }))
       setCollections(mappedCollections)
-      setAvailableMembers(memberRaw.members.map((member) => ({ id: String(member.membershipId), membershipId: String(member.membershipId), name: member.memberName, studentId: member.studentNumber, generation: member.generation || '-', amount: 0, status: 'unpaid' })))
+      setAvailableMembers(memberRaw.members.filter((member) => member.status === 'ACTIVE').map((member) => ({ id: String(member.membershipId), membershipId: String(member.membershipId), name: member.memberName, studentId: member.studentNumber, generation: member.generation || '-', amount: 0, status: 'unpaid' })))
       if (mappedCollections[0]) {
-        const targetsRaw = await feesApi.feeTargets(activeOrganization.organizationId, mappedCollections[0].id) as { content?: Array<Record<string, unknown>> }
+        const targetsRaw = await feesApi.feeTargets(activeOrganization.organizationId, mappedCollections[0].id) as { content?: Array<Record<string, unknown>>; summary?: { targetCount?: number; paidCount?: number; unpaidCount?: number; paymentRate?: number } }
         const targets = (targetsRaw.content ?? []).map((target): FeePaymentMember => ({
           id: String(target.feeTargetId), membershipId: String(target.membershipId), name: String(target.name), studentId: String(target.studentNumber), generation: String(target.generation ?? '-'), amount: Number(target.amountDue ?? 0), status: target.status === 'PAID' ? 'paid' : 'unpaid',
         }))
         setPaymentMembers(targets)
-        const paidCount = targets.filter((target) => target.status === 'paid').length
-        setPaymentSummary({ feeItemId: Number(mappedCollections[0].id), targetCount: targets.length, paidCount, unpaidCount: targets.length - paidCount, paymentRate: targets.length ? paidCount / targets.length * 100 : 0 })
+        const targetCount = Number(targetsRaw.summary?.targetCount ?? targets.length)
+        const paidCount = Number(targetsRaw.summary?.paidCount ?? targets.filter((target) => target.status === 'paid').length)
+        setPaymentSummary({ feeItemId: Number(mappedCollections[0].id), targetCount, paidCount, unpaidCount: Number(targetsRaw.summary?.unpaidCount ?? targetCount - paidCount), paymentRate: Number(targetsRaw.summary?.paymentRate ?? (targetCount ? paidCount / targetCount * 100 : 0)) })
       } else setPaymentMembers([])
       setRequestError('')
     } catch (error) { setRequestError(errorMessage(error)) }
@@ -134,7 +131,7 @@ export function FeesPage() {
       else await feesApi.createFeeItem(activeOrganization.organizationId, { ...base, categories })
       closeFeeItemModal()
       await loadFees()
-    } catch (error) { setRequestError(errorMessage(error)) }
+    } catch (error) { setRequestError(errorMessage(error)); throw error }
   }
 
   const handleFeeItemDelete = async () => {
@@ -187,7 +184,7 @@ export function FeesPage() {
   const handleCollectionChange = async (collectionId: string) => {
     if (!activeOrganization) return
     try {
-      const targetsRaw = await feesApi.feeTargets(activeOrganization.organizationId, collectionId) as { content?: Array<Record<string, unknown>> }
+      const targetsRaw = await feesApi.feeTargets(activeOrganization.organizationId, collectionId) as { content?: Array<Record<string, unknown>>; summary?: { targetCount?: number; paidCount?: number; unpaidCount?: number; paymentRate?: number } }
       const targets = (targetsRaw.content ?? []).map((target): FeePaymentMember => ({
         id: String(target.feeTargetId),
         membershipId: String(target.membershipId),
@@ -198,8 +195,9 @@ export function FeesPage() {
         status: target.status === 'PAID' ? 'paid' : 'unpaid',
       }))
       setPaymentMembers(targets)
-      const paidCount = targets.filter((target) => target.status === 'paid').length
-      setPaymentSummary({ feeItemId: Number(collectionId), targetCount: targets.length, paidCount, unpaidCount: targets.length - paidCount, paymentRate: targets.length ? paidCount / targets.length * 100 : 0 })
+      const targetCount = Number(targetsRaw.summary?.targetCount ?? targets.length)
+      const paidCount = Number(targetsRaw.summary?.paidCount ?? targets.filter((target) => target.status === 'paid').length)
+      setPaymentSummary({ feeItemId: Number(collectionId), targetCount, paidCount, unpaidCount: Number(targetsRaw.summary?.unpaidCount ?? targetCount - paidCount), paymentRate: Number(targetsRaw.summary?.paymentRate ?? (targetCount ? paidCount / targetCount * 100 : 0)) })
       setRequestError('')
     } catch (error) {
       setRequestError(errorMessage(error))
@@ -241,7 +239,7 @@ export function FeesPage() {
       setRequestError('')
     } catch (error) { setRequestError(errorMessage(error)) }
   }
-  if (activeOrganization?.myRole === 'MEMBER' || role === 'member') {
+  if (activeOrganization?.myRole === 'MEMBER') {
     return <ApiMemberFeesPage />
   }
 
@@ -301,6 +299,7 @@ export function FeesPage() {
         <FeesSummary
           balance={ledgerSummary.balance}
           semesterExpense={ledgerSummary.expense}
+          expenseCount={ledgerSummary.expenseCount}
           paidCount={paymentSummary.paidCount}
           totalCount={paymentSummary.targetCount}
         />
@@ -318,6 +317,7 @@ export function FeesPage() {
           <FeesPayments
             collections={collections}
             members={paymentMembers}
+            paymentSummary={paymentSummary}
             onPaymentStatusChange={
               handlePaymentStatusChange
             }

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { DashboardShell } from '../dashboard/DashboardShell'
 import { CalendarGrid } from './CalendarGrid'
-import {calendarMockData,type CalendarItem,} from './scheduleMock'
+import type { CalendarItem } from './scheduleMock'
 import { ScheduleFormModal } from './ScheduleFormModal'
 import { ScheduleDetailModal } from './ScheduleDetailModal'
 import { ScheduleDeleteModal } from './ScheduleDeleteModal'
@@ -16,11 +16,9 @@ import { useSession } from '../../context/SessionContext'
 export function SchedulePage() {
   const { activeOrganization } = useSession()
   const [searchParams, setSearchParams] = useSearchParams()
-const role = searchParams.get('role')
-
-const isMember = activeOrganization?.myRole === 'MEMBER' || role === 'member'
+const isMember = activeOrganization?.myRole === 'MEMBER'
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [items, setItems] = useState<CalendarItem[]>(calendarMockData)
+  const [items, setItems] = useState<CalendarItem[]>([])
   const [loadError, setLoadError] = useState('')
 
   const year = currentDate.getFullYear()

@@ -49,12 +49,11 @@ export function DashboardShell({
       activeNav={activeNav}
       onNavChange={(label) => {
         const path = navPaths[label]
-        if (path) navigate(`${path}${isAdmin ? '' : '?role=member'}`)
+        if (path) navigate(path)
       }}
       navItems={isAdmin ? adminNavItems : memberNavItems}
       organizationName={activeOrganization?.name ?? '동아리를 선택해 주세요'}
       userName={user?.name ?? '사용자'}
-      notificationCount={isAdmin ? 3 : 1}
       showSettings={isAdmin}
     >
       {children}

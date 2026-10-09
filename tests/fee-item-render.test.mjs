@@ -1,19 +1,29 @@
-import { before, test } from 'node:test'
+import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { loadSsrModules } from './loadSsrModules.mjs'
+import { createRenderLoader } from './render-loader.mjs'
 
+let server
 let FeeItemModal
 let feeCollections
 
 before(async () => {
-  const modules = await loadSsrModules('fees', {
-    FeeItemModal: 'src/pages/fees/components/FeeItemModal.tsx',
-    feesMock: 'src/pages/fees/feesMock.ts',
-  })
-  FeeItemModal = modules.FeeItemModal.FeeItemModal
-  feeCollections = modules.feesMock.feeCollections
+  server = createRenderLoader()
+  FeeItemModal = (
+    await server.ssrLoadModule(
+      '/src/pages/fees/components/FeeItemModal.tsx',
+    )
+  ).FeeItemModal
+  feeCollections = (
+    await server.ssrLoadModule(
+      '/src/pages/fees/feesMock.ts',
+    )
+  ).feeCollections
+})
+
+after(async () => {
+  await server?.close()
 })
 
 const modalProps = {
@@ -48,5 +58,9 @@ test('the create modal keeps registration copy without deletion', () => {
 
   assert.match(html, /납부 항목 등록/)
   assert.match(html, /회비 등록하기/)
+  assert.match(html, /선택 인원<strong>0명/)
+  assert.match(html, /예상 총 납부액<strong>₩ 0/)
+  assert.match(html, /placeholder="예: 2026년 2학기 정기 납부" value=""/)
+  assert.doesNotMatch(html, /2,560,000/)
   assert.doesNotMatch(html, /항목 삭제/)
 })

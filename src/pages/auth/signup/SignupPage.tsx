@@ -18,10 +18,10 @@ type SignupForm = {
 type SignupErrors = Partial<Record<keyof SignupForm, string>>
 
 const initialForm: SignupForm = {
-  name: '김동방',
-  studentId: '20260004',
-  department: '컴퓨터정보공학부',
-  email: 'dongbang@example.com',
+  name: '',
+  studentId: '',
+  department: '',
+  email: '',
 }
 
 export function SignupPage() {
@@ -39,11 +39,12 @@ export function SignupPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    const email = form.email.trim() || user?.email?.trim() || ''
     const nextErrors: SignupErrors = {}
     if (!form.name.trim()) nextErrors.name = '이름을 입력해 주세요.'
     if (!/^\d+$/.test(form.studentId.trim())) nextErrors.studentId = '학번은 숫자로 입력해 주세요.'
     if (!form.department.trim()) nextErrors.department = '학과를 입력해 주세요.'
-    if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) nextErrors.email = '이메일 형식을 확인해 주세요.'
+    if (!/^\S+@\S+\.\S+$/.test(email)) nextErrors.email = '이메일 형식을 확인해 주세요.'
     setErrors(nextErrors)
 
     const firstInvalidField = Object.keys(nextErrors)[0]
@@ -59,7 +60,7 @@ export function SignupPage() {
         name: form.name.trim(),
         studentNumber: form.studentId.trim(),
         department: form.department.trim(),
-        email: form.email.trim(),
+        email,
       })
       await refresh()
       navigate(PATHS.clubs)

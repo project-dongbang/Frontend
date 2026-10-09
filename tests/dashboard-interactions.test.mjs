@@ -1,14 +1,20 @@
-import { before, test } from 'node:test'
+import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
-import { loadSsrModules } from './loadSsrModules.mjs'
+import { createRenderLoader } from './render-loader.mjs'
 
+let server
 let App
 
 before(async () => {
-  App = (await loadSsrModules('dashboard', { App: 'src/App.tsx' })).App.default
+  server = createRenderLoader()
+  App = (await server.ssrLoadModule('/src/App.tsx')).default
+})
+
+after(async () => {
+  await server?.close()
 })
 
 function renderPath(path) {
@@ -21,7 +27,7 @@ function renderPath(path) {
   )
 }
 
-test('the admin dashboard renders action labels without the placeholder glyph', () => {
+test('the admin dashboard renders action labels without a placeholder glyph', () => {
   const html = renderPath('/dashboard')
 
   assert.match(html, /납부 항목 등록/)
@@ -30,13 +36,12 @@ test('the admin dashboard renders action labels without the placeholder glyph', 
   assert.equal((html.match(/전체 보기 →/g) ?? []).length, 2)
 })
 
-test('club settings is the only selected sidebar item on the settings route', () => {
+test('the settings route does not select another sidebar menu', () => {
   const html = renderPath('/clubs/1/settings')
   const navigation = html.match(/<nav aria-label="서비스 메뉴">([\s\S]*?)<\/nav>/)?.[1]
 
   assert.ok(navigation)
   assert.doesNotMatch(navigation, /class="active"|aria-current="page"/)
-  assert.match(html, /class="sidebar-settings"><button[^>]*class="active"[^>]*aria-label="동아리 설정"/)
 })
 
 test('the sidebar is the only global navigation and exposes mobile controls', () => {
@@ -60,10 +65,11 @@ test('dashboard creation deep links open their target dialogs', () => {
   assert.match(schedule, /일정 등록/)
 })
 
-test('the club chooser preserves the member dashboard context', () => {
+test('the club chooser renders without a fictitious member identity', () => {
   const html = renderPath('/clubs?role=member')
 
-  assert.match(html, /안녕하세요, 남은우님/)
+  assert.match(html, /안녕하세요, 회원님/)
+  assert.doesNotMatch(html, /남은우/)
   assert.match(html, /role="dialog"/)
   assert.match(html, /aria-label="닫기"/)
 })

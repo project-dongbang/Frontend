@@ -1,8 +1,5 @@
 import { DashboardShell } from '../dashboard/DashboardShell'
-import {
-  memberAttendanceItems,
-  memberAttendanceStatusLabel,
-} from './attendanceMock'
+import { memberAttendanceStatusLabel } from './attendanceMock'
 import './attendance.css'
 import { useNavigate } from 'react-router-dom'
 import { PATHS } from '../../routes/paths'
@@ -15,7 +12,7 @@ import type { MemberAttendanceItem } from './attendanceMock'
 export function MemberAttendancePage() {
     const navigate = useNavigate()
   const { activeOrganization } = useSession()
-  const [items, setItems] = useState<MemberAttendanceItem[]>(memberAttendanceItems)
+  const [items, setItems] = useState<MemberAttendanceItem[]>([])
   const [requestError, setRequestError] = useState('')
   const [checkInEventId, setCheckInEventId] = useState('')
   const [qrToken, setQrToken] = useState('')

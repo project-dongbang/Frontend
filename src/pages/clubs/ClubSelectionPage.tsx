@@ -1,4 +1,4 @@
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '../../components/common'
 import { ClubBackdrop } from './ClubBackdrop'
 import { useClubDialog } from './useClubDialog'
@@ -7,10 +7,9 @@ import { useSession } from '../../context/SessionContext'
 
 export function ClubSelectionPage() {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
   const { organizations, activeOrganization, selectOrganization, loading } = useSession()
-  const isMember = activeOrganization?.myRole === 'MEMBER' || searchParams.get('role') === 'member'
-  const dashboardPath = isMember ? '/dashboard?role=member' : '/dashboard'
+  const isMember = activeOrganization?.myRole === 'MEMBER'
+  const dashboardPath = '/dashboard'
   const close = () => navigate(dashboardPath)
   const { dialogRef, handleBackdropMouseDown } =
     useClubDialog<HTMLElement>({

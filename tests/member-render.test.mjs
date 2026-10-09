@@ -3,54 +3,52 @@ import assert from 'node:assert/strict'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
-import { loadSsrModules } from './loadSsrModules.mjs'
+import { createRenderLoader } from './render-loader.mjs'
 
+let server
 let App
 let MemberFormModal
 let MemberRoleModal
 let membersMock
 
 before(async () => {
-  const modules = await loadSsrModules('members', {
-    App: 'src/App.tsx',
-    MemberFormModal: 'src/pages/members/MemberFormModal.tsx',
-    MemberRoleModal: 'src/pages/members/MemberRoleModal.tsx',
-    membersMock: 'src/pages/members/membersMock.ts',
-  })
-  App = modules.App.default
-  MemberFormModal = modules.MemberFormModal.MemberFormModal
-  MemberRoleModal = modules.MemberRoleModal.MemberRoleModal
-  membersMock = modules.membersMock.membersMock
+  server = createRenderLoader()
+  App = (await server.ssrLoadModule('/src/App.tsx')).default
+  MemberFormModal = (await server.ssrLoadModule('/src/pages/members/MemberFormModal.tsx')).MemberFormModal
+  MemberRoleModal = (await server.ssrLoadModule('/src/pages/members/MemberRoleModal.tsx')).MemberRoleModal
+  membersMock = (await server.ssrLoadModule('/src/pages/members/membersMock.ts')).membersMock
   // Only the invitation's origin is needed for server-side rendering; no browser is launched.
   globalThis.window = { location: { origin: 'https://dongbang.example' } }
 })
 
 after(async () => {
   delete globalThis.window
+  await server?.close()
 })
 
 function renderPath(path) {
   return renderToStaticMarkup(createElement(MemoryRouter, { initialEntries: [path] }, createElement(App)))
 }
 
-test('the members route renders the full fixture roster and calculated counts', () => {
+test('the members route starts with an empty roster until the API responds', () => {
   const html = renderPath('/members')
-  assert.match(html, /전체 멤버 64명/)
-  assert.match(html, /운영진 5명 · 검색 결과 64명/)
-  assert.equal(html.split('<tbody>')[1].split('</tbody>')[0].match(/<tr>/g).length, 64)
-  assert.match(html, /class="active"[^>]*><svg[^]*?멤버 관리/)
+  assert.match(html, /전체 멤버 0명/)
+  assert.match(html, /운영진 0명 · 검색 결과 0명/)
+  assert.doesNotMatch(html, /20260004|<tbody>/)
 })
 
-test('the member preview cannot render the roster or invitation dialog', () => {
+test('a role query parameter cannot grant or revoke member permissions', () => {
   const html = renderPath('/members?role=member&dialog=invite')
-  assert.match(html, /운영진만 이용할 수 있어요/)
-  assert.doesNotMatch(html, /<table|role="dialog"|20260004/)
+  assert.match(html, /전체 멤버 0명/)
+  assert.match(html, /멤버 초대/)
+  assert.doesNotMatch(html, /운영진만 이용할 수 있어요|20260004/)
 })
 
-test('the invitation deep link renders the modal with the current origin and join route', () => {
+test('the invitation dialog does not invent a code before the API responds', () => {
   const html = renderPath('/members?dialog=invite')
   assert.match(html, /role="dialog"/)
-  assert.match(html, /https:\/\/dongbang.example\/clubs\/join\?invite=DB-DLOG/)
+  assert.match(html, /초대 링크 복사<\/button>/)
+  assert.doesNotMatch(html, /DB-DLOG/)
   assert.doesNotMatch(html, /멤버 직접 등록/)
 })
 

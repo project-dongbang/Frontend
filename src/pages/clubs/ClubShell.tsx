@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { AppLayout } from '../../components/layout/AppLayout'
+import { useSession } from '../../context/SessionContext'
 import { PATHS } from '../../routes/paths'
 
 const navItems = [
@@ -14,6 +15,7 @@ const navItems = [
 export function ClubShell({ children, member = false }: { children: ReactNode; member?: boolean }) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
+  const { activeOrganization, user } = useSession()
   const settingsActive = /^\/clubs\/[^/]+\/settings$/.test(pathname)
   const navPaths: Record<string, string> = {
     '대시보드': PATHS.dashboard,
@@ -32,12 +34,13 @@ export function ClubShell({ children, member = false }: { children: ReactNode; m
         activeNav={activeNav}
         onNavChange={(label) => {
           const path = navPaths[label]
-          if (path) navigate(`${path}${member ? '?role=member' : ''}`)
+          if (path) navigate(path)
         }}
         settingsActive={settingsActive}
         navItems={navItems}
-        organizationName="D.Log 개발동아리"
-        userName={member ? '남은우' : '김동방'}
+        organizationName={activeOrganization?.name ?? '동아리를 선택해 주세요'}
+        userName={user?.name ?? '사용자'}
+        showSettings={Boolean(activeOrganization && !member && activeOrganization.myRole !== 'MEMBER')}
       >
         {children}
       </AppLayout>

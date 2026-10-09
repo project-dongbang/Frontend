@@ -1,6 +1,6 @@
 import { Button, Modal } from '../../components/common'
 import { GalleryArtwork } from './GalleryArtwork'
-import type { GalleryPhoto } from './galleryMock'
+import type { GalleryPhoto } from './galleryTypes'
 
 type GalleryDetailModalProps = {
   open: boolean
@@ -46,7 +46,7 @@ export function GalleryDetailModal({
         <div
           className={`gallery-detail-art tone-${photo.tone}`}
           role="img"
-          aria-label={photo.title}
+          aria-label={photo.title || '제목 없음'}
         >
           <GalleryArtwork
             tone={photo.tone}
@@ -56,7 +56,7 @@ export function GalleryDetailModal({
         </div>
 
         <figcaption>
-          <strong>{photo.title}</strong>
+          <strong>{photo.title || '제목 없음'}</strong>
           <span>등록일 {photo.createdAt}</span>
         </figcaption>
       </figure>

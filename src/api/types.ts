@@ -89,3 +89,17 @@ export type Notification = {
   readAt?: string
   sentAt: string
 }
+
+export type PhotoListItem = {
+  photoId: number
+  title: string | null
+  imageUrl: string | null
+  createdAt: string
+}
+
+export type PhotoDetail = {
+  photoId: number
+  title: string | null
+  file: { url: string }
+  createdAt: string
+}

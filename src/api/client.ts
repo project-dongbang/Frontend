@@ -38,7 +38,9 @@ let responseCsrfHeaderName = 'X-XSRF-TOKEN'
 let csrfRequest: Promise<void> | null = null
 
 function currentCsrfToken() {
-  return responseCsrfToken || decodeURIComponent(readCookie('XSRF-TOKEN') || readCookie('xsrf_token'))
+  const sameOrigin = typeof window !== 'undefined' && new URL(API_BASE_URL, window.location.href).origin === window.location.origin
+  const cookieToken = sameOrigin ? decodeURIComponent(readCookie('XSRF-TOKEN') || readCookie('xsrf_token')) : ''
+  return cookieToken || responseCsrfToken
 }
 
 function captureCsrfToken(response: Response) {
@@ -46,8 +48,9 @@ function captureCsrfToken(response: Response) {
   if (token) responseCsrfToken = token
 }
 
-async function ensureCsrfToken() {
-  if (currentCsrfToken()) return
+async function ensureCsrfToken(force = false) {
+  if (force) responseCsrfToken = ''
+  if (!force && currentCsrfToken()) return
   if (!csrfRequest) {
     csrfRequest = fetch(apiUrl('/api/v1/auth/csrf'), { credentials: 'include' })
       .then(async (response) => {
@@ -67,6 +70,7 @@ type ApiRequestOptions = Omit<RequestInit, 'body'> & {
   body?: BodyInit | Record<string, unknown> | null
   raw?: boolean
   retry?: boolean
+  csrfRetry?: boolean
 }
 
 export function apiUrl(path: string) {
@@ -74,7 +78,7 @@ export function apiUrl(path: string) {
 }
 
 export async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
-  const { body, raw = false, retry = true, ...init } = options
+  const { body, raw = false, retry = true, csrfRetry = true, ...init } = options
   const headers = new Headers(init.headers)
   const isFormData = body instanceof FormData
   const requestBody = body && !isFormData && typeof body === 'object'
@@ -121,6 +125,12 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
   const payload = contentType.includes('application/json')
     ? await response.json() as Partial<ApiEnvelope<T>>
     : null
+
+  if (response.status === 403 && csrfRetry && !['GET', 'HEAD', 'OPTIONS'].includes(method)
+      && payload?.code === 'AUTH_403_001' && payload.message === '요청이 거부되었습니다.') {
+    await ensureCsrfToken(true)
+    return apiRequest<T>(path, { ...options, csrfRetry: false })
+  }
 
   if (!response.ok || payload?.isSuccess === false) {
     throw new ApiError(
