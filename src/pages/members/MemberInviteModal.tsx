@@ -4,15 +4,14 @@ import { PATHS } from '../../routes/paths'
 import { organizationApi } from '../../api/services'
 import { errorMessage } from '../../api/client'
 import { useSession } from '../../context/SessionContext'
-import { memberClubMock } from './membersMock'
 
 export function MemberInviteModal({ onClose }: { onClose: () => void }) {
   const [notice, setNotice] = useState('')
   const [copying, setCopying] = useState(false)
-  const [inviteCode, setInviteCode] = useState<string>(memberClubMock.inviteCode)
+  const [inviteCode, setInviteCode] = useState('')
   const { activeOrganization } = useSession()
   const inviteUrl = new URL(PATHS.joinClub, window.location.origin)
-  inviteUrl.searchParams.set('invite', inviteCode)
+  if (inviteCode) inviteUrl.searchParams.set('invite', inviteCode)
 
   useEffect(() => {
     if (!activeOrganization) return
@@ -35,10 +34,10 @@ export function MemberInviteModal({ onClose }: { onClose: () => void }) {
   }
 
   return <Modal open title="멤버 초대" className="member-modal member-invite-modal" onClose={onClose}>
-    <p className="member-invite-description">{activeOrganization?.name ?? memberClubMock.name}에 함께할 멤버에게 초대 정보를 전달하세요.</p>
+    <p className="member-invite-description">{activeOrganization?.name ?? '동아리'}에 함께할 멤버에게 초대 정보를 전달하세요.</p>
     <div className="member-invite-fields">
       <Input label="초대 코드" value={inviteCode} placeholder="생성 중…" readOnly onFocus={(event) => event.currentTarget.select()} />
-      <Input label="초대 링크" type="url" value={inviteUrl.href} readOnly onFocus={(event) => event.currentTarget.select()} />
+      <Input label="초대 링크" type="url" value={inviteCode ? inviteUrl.href : ''} readOnly onFocus={(event) => event.currentTarget.select()} />
     </div>
     <p className="member-form-hint">초대된 회원은 일반 회원으로 참여합니다. 역할은 멤버 관리에서 변경할 수 있어요.</p>
     <div className="member-invite-actions">

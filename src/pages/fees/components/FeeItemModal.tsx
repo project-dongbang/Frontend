@@ -5,50 +5,24 @@ import {
 } from 'react'
 
 import {
-  feePaymentMembers,
   type FeeCategory,
   type FeeCollection,
   type FeeCollectionDraft,
   type FeePaymentMember,
 } from '../feesMock'
 import { FeeMemberPickerModal } from './FeeMemberPickerModal'
+import { errorMessage } from '../../../api/client'
+import { createInitialFeeCategories, summarizeFeeCategories } from '../feeItemDraft'
 
 type FeeItemModalProps = {
   collection?: FeeCollection
   onClose: () => void
-  onSave: (collection: FeeCollectionDraft) => void
+  onSave: (collection: FeeCollectionDraft) => Promise<void> | void
   onDelete?: () => void
   members?: FeePaymentMember[]
 }
 
 const categoryPalette = ['', 'coral', 'green', 'amber']
-
-const createInitialCategories = (members: FeePaymentMember[]): FeeCategory[] => {
-  const memberIds = members.map(
-    (member) => member.id,
-  )
-
-  return [
-    {
-      id: 'category-normal',
-      name: '일반 납부',
-      amount: 40000,
-      memberIds: memberIds.slice(0, 58),
-    },
-    {
-      id: 'category-discount',
-      name: '할인 납부',
-      amount: 30000,
-      memberIds: memberIds.slice(58, 61),
-    },
-    {
-      id: 'category-support',
-      name: '지원 납부',
-      amount: 50000,
-      memberIds: memberIds.slice(61),
-    },
-  ]
-}
 
 const toDateInputValue = (date: string) =>
   date.replaceAll('.', '-')
@@ -58,11 +32,11 @@ export function FeeItemModal({
   onClose,
   onSave,
   onDelete,
-  members = feePaymentMembers,
+  members = [],
 }: FeeItemModalProps) {
   const isEditing = Boolean(collection)
   const [title, setTitle] = useState(
-    collection?.title ?? '2026년 2학기 정기 납부',
+    collection?.title ?? '',
   )
   const [dueDate, setDueDate] = useState(
     collection ? toDateInputValue(collection.dueDate) : '',
@@ -71,7 +45,7 @@ export function FeeItemModal({
     collection?.description ?? '',
   )
   const [bank, setBank] = useState(
-    collection?.bank ?? '카카오뱅크',
+    collection?.bank ?? '',
   )
   const [accountNumber, setAccountNumber] = useState(
     collection?.accountNumber ?? '',
@@ -87,34 +61,20 @@ export function FeeItemModal({
           ...category,
           memberIds: [...category.memberIds],
         }))
-      : createInitialCategories(members),
+      : createInitialFeeCategories(),
   )
   const [editingCategoryId, setEditingCategoryId] =
     useState<string | null>(null)
   const [deleteConfirmOpen, setDeleteConfirmOpen] =
     useState(false)
   const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   const editingCategory = categories.find(
     (category) => category.id === editingCategoryId,
   )
-  const selectedMemberIds = useMemo(
-    () =>
-      new Set(
-        categories.flatMap(
-          (category) => category.memberIds,
-        ),
-      ),
-    [categories],
-  )
-  const expectedAmount = useMemo(
-    () =>
-      categories.reduce(
-        (total, category) =>
-          total +
-          category.amount * category.memberIds.length,
-        0,
-      ),
+  const { selectedMemberCount, expectedAmount } = useMemo(
+    () => summarizeFeeCategories(categories),
     [categories],
   )
 
@@ -154,7 +114,7 @@ export function FeeItemModal({
     setEditingCategoryId(null)
   }
 
-  const handleSubmit: ComponentProps<'form'>['onSubmit'] = (
+  const handleSubmit: ComponentProps<'form'>['onSubmit'] = async (
     event,
   ) => {
     event.preventDefault()
@@ -187,19 +147,27 @@ export function FeeItemModal({
       return
     }
 
-    onSave({
-      title: title.trim(),
-      dueDate: dueDate.replaceAll('-', '.'),
-      description: description.trim(),
-      bank: bank.trim(),
-      accountNumber: accountNumber.trim(),
-      accountHolder: accountHolder.trim(),
-      categories: categories.map((category) => ({
-        ...category,
-        name: category.name.trim(),
-        memberIds: [...category.memberIds],
-      })),
-    })
+    setSubmitting(true)
+    setError('')
+    try {
+      await onSave({
+        title: title.trim(),
+        dueDate: dueDate.replaceAll('-', '.'),
+        description: description.trim(),
+        bank: bank.trim(),
+        accountNumber: accountNumber.trim(),
+        accountHolder: accountHolder.trim(),
+        categories: categories.map((category) => ({
+          ...category,
+          name: category.name.trim(),
+          memberIds: [...category.memberIds],
+        })),
+      })
+    } catch (requestError) {
+      setError(errorMessage(requestError))
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -490,7 +458,7 @@ export function FeeItemModal({
                 <div className="fee-category-summary">
                   <span>
                     선택 인원
-                    <strong>{selectedMemberIds.size}명</strong>
+                    <strong>{selectedMemberCount}명</strong>
                   </span>
                   <span>
                     예상 총 납부액
@@ -526,8 +494,8 @@ export function FeeItemModal({
                   항목 삭제
                 </button>
               )}
-              <button type="submit" className="fees-primary-btn">
-                {isEditing ? '변경 사항 저장' : '회비 등록하기'}
+              <button type="submit" className="fees-primary-btn" disabled={submitting}>
+                {submitting ? '저장 중…' : isEditing ? '변경 사항 저장' : '회비 등록하기'}
               </button>
             </div>
           </footer>

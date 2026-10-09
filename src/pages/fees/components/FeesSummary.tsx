@@ -1,6 +1,7 @@
 type FeesSummaryProps = {
   balance: number
   semesterExpense: number
+  expenseCount: number
   paidCount: number
   totalCount: number
 }
@@ -11,6 +12,7 @@ const formatMoney = (value: number) =>
 export function FeesSummary({
   balance,
   semesterExpense,
+  expenseCount,
   paidCount,
   totalCount,
 }: FeesSummaryProps) {
@@ -27,9 +29,9 @@ export function FeesSummary({
       </div>
 
       <div className="fees-money-card is-coral">
-        <span>이번 학기 사용</span>
+        <span>누적 사용</span>
         <strong>{formatMoney(semesterExpense)}</strong>
-        <small>사용 내역 14건</small>
+        <small>사용 내역 {expenseCount}건</small>
       </div>
 
       <div className="fees-money-card is-light">

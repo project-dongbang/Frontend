@@ -3,16 +3,13 @@ import assert from 'node:assert/strict'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
-import { createServer } from 'vite'
+import { createRenderLoader } from './render-loader.mjs'
 
 let server
 let App
 
 before(async () => {
-  server = await createServer({
-    server: { middlewareMode: true, watch: null },
-    appType: 'custom',
-  })
+  server = createRenderLoader()
   App = (await server.ssrLoadModule('/src/App.tsx')).default
 })
 
@@ -30,12 +27,21 @@ function renderPath(path) {
   )
 }
 
-test('the admin dashboard renders all four navigation actions', () => {
+test('the admin dashboard renders action labels without a placeholder glyph', () => {
   const html = renderPath('/dashboard')
 
   assert.match(html, /납부 항목 등록/)
   assert.match(html, /행사 만들기/)
+  assert.doesNotMatch(html, /▣/)
   assert.equal((html.match(/전체 보기 →/g) ?? []).length, 2)
+})
+
+test('the settings route does not select another sidebar menu', () => {
+  const html = renderPath('/clubs/1/settings')
+  const navigation = html.match(/<nav aria-label="서비스 메뉴">([\s\S]*?)<\/nav>/)?.[1]
+
+  assert.ok(navigation)
+  assert.doesNotMatch(navigation, /class="active"|aria-current="page"/)
 })
 
 test('the sidebar is the only global navigation and exposes mobile controls', () => {
@@ -59,10 +65,11 @@ test('dashboard creation deep links open their target dialogs', () => {
   assert.match(schedule, /일정 등록/)
 })
 
-test('the club chooser preserves the member dashboard context', () => {
+test('the club chooser renders without a fictitious member identity', () => {
   const html = renderPath('/clubs?role=member')
 
-  assert.match(html, /안녕하세요, 남은우님/)
+  assert.match(html, /안녕하세요, 회원님/)
+  assert.doesNotMatch(html, /남은우/)
   assert.match(html, /role="dialog"/)
   assert.match(html, /aria-label="닫기"/)
 })

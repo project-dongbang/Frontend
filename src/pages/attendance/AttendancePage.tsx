@@ -1,14 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
 import { MemberAttendancePage } from './MemberAttendancePage'
 import { DashboardShell } from '../dashboard/DashboardShell'
 import { AttendanceQrPanel } from './AttendanceQrPanel'
 import { AttendanceRoster } from './AttendanceRoster'
-import {
-  attendanceEvents,
-  attendanceMembers,
-} from './attendanceMock'
-import type { AttendanceEvent, AttendanceStatus } from './attendanceMock'
+import type { AttendanceEvent, AttendanceMember, AttendanceStatus } from './attendanceMock'
 import './attendance.css'
 import { attendanceApi } from '../../api/services'
 import { errorMessage } from '../../api/client'
@@ -18,19 +13,15 @@ export type AttendanceFilter = AttendanceStatus | 'all'
 
 export function AttendancePage() {
   const { activeOrganization } = useSession()
-  const [searchParams] = useSearchParams()
-  const role = searchParams.get('role')
-  const [selectedEventId, setSelectedEventId] = useState(
-    activeOrganization ? '' : attendanceEvents[0]?.id ?? '',
-  )
+  const [selectedEventId, setSelectedEventId] = useState('')
   const [filter, setFilter] =
     useState<AttendanceFilter>('present')
   const [search, setSearch] = useState('')
   const [refreshText, setRefreshText] =
     useState('행사 출석 체크인')
-  const [events, setEvents] = useState(attendanceEvents)
+  const [events, setEvents] = useState<AttendanceEvent[]>([])
   const [eventsOrganizationId, setEventsOrganizationId] = useState<number | null>(null)
-  const [members, setMembers] = useState(attendanceMembers)
+  const [members, setMembers] = useState<AttendanceMember[]>([])
   const [membersOrganizationId, setMembersOrganizationId] = useState<number | null>(null)
   const [requestError, setRequestError] = useState('')
   const currentEvents = useMemo(() => activeOrganization && eventsOrganizationId !== activeOrganization.organizationId ? [] : events, [activeOrganization, eventsOrganizationId, events])
@@ -57,7 +48,7 @@ export function AttendancePage() {
   }, [activeOrganization])
 
   useEffect(() => {
-    if (!activeOrganization || !selectedEventId || eventsOrganizationId !== activeOrganization.organizationId || !events.some((event) => event.id === selectedEventId)) return
+    if (!activeOrganization || !selectedEventId || eventsOrganizationId !== activeOrganization.organizationId) return
     const organizationId = activeOrganization.organizationId
     let cancelled = false
     attendanceApi.status(organizationId, selectedEventId).then((raw) => {
@@ -74,7 +65,7 @@ export function AttendancePage() {
       setRequestError(errorMessage(error))
     })
     return () => { cancelled = true }
-  }, [activeOrganization, eventsOrganizationId, events, selectedEventId])
+  }, [activeOrganization, eventsOrganizationId, selectedEventId])
 
   const selectedEvent = currentEvents.find(
     (event) => event.id === selectedEventId,
@@ -153,7 +144,7 @@ const handleDownload = () => {
       }).catch((error) => setRequestError(errorMessage(error)))
     }
   }
-  if (activeOrganization?.myRole === 'MEMBER' || role === 'member') {
+  if (activeOrganization?.myRole === 'MEMBER') {
   return <MemberAttendancePage />
 }
 

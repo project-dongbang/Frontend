@@ -1,7 +1,6 @@
-import type { GalleryPhoto } from './galleryMock'
+import type { GalleryPhoto } from './galleryTypes'
 
 export function GalleryArtwork({
-  tone,
   imageUrl,
   alt = '',
 }: Pick<GalleryPhoto, 'tone' | 'imageUrl'> & {
@@ -17,14 +16,5 @@ export function GalleryArtwork({
     )
   }
 
-  return (
-    <span
-      className={`gallery-art tone-${tone}`}
-      aria-hidden="true"
-    >
-      <i />
-      <b />
-      <em />
-    </span>
-  )
+  return <span className="gallery-image-placeholder">이미지 없음</span>
 }

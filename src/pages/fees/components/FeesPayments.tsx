@@ -8,6 +8,7 @@ import type {
 type FeesPaymentsProps = {
   collections: FeeCollection[]
   members: FeePaymentMember[]
+  paymentSummary: { feeItemId: number; paidCount: number; targetCount: number }
   onPaymentStatusChange: (
     collectionId: string,
     memberId: string,
@@ -26,6 +27,7 @@ const formatMoney = (value: number) =>
 export function FeesPayments({
   collections,
   members,
+  paymentSummary,
   onPaymentStatusChange,
   onExport,
   onEditCollection,
@@ -57,10 +59,6 @@ export function FeesPayments({
     )
   }, [filter, members])
 
-  const paidCount = members.filter(
-    (member) => member.status === 'paid',
-  ).length
-
   if (!selectedCollection) {
     return (
       <section className="fees-card fees-placeholder">
@@ -75,8 +73,8 @@ export function FeesPayments({
       <div>
         <h2>멤버별 납부 현황</h2>
         <p>
-          {selectedCollection.dueDate} 마감 · {paidCount}/
-          {members.length}명 완료 · {selectedCollection.bank}{' '}
+          {selectedCollection.dueDate} 마감 · {paymentSummary.feeItemId === Number(selectedCollection.id) ? paymentSummary.paidCount : 0}/
+          {paymentSummary.feeItemId === Number(selectedCollection.id) ? paymentSummary.targetCount : 0}명 완료 · {selectedCollection.bank}{' '}
           {selectedCollection.accountNumber}{' '}
           {selectedCollection.accountHolder}
         </p>
