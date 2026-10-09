@@ -10,7 +10,7 @@
 
 .attendance-page-head {
   display: flex;
-  align-items: end;
+  align-items: center;
   justify-content: space-between;
   gap: 20px;
   margin-bottom: 22px;
@@ -786,7 +786,8 @@
 
 @media (max-width: 760px) {
   .attendance-page-head {
-    align-items: flex-start;
+    align-items: stretch;
+    flex-direction: column;
     margin-bottom: 20px;
   }
 
@@ -799,10 +800,7 @@
   }
 
   .attendance-refresh-button {
-    width: 42px;
-    padding: 0;
-    overflow: hidden;
-    font-size: 0;
+    width: 100%;
   }
 
   .attendance-layout {

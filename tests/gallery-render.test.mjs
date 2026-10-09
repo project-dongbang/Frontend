@@ -1,11 +1,10 @@
-import { after, before, test } from 'node:test'
+import { before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
-import { createServer } from 'vite'
+import { loadSsrModules } from './loadSsrModules.mjs'
 
-let server
 let App
 let GalleryDetailModal
 let GalleryPhotoFormModal
@@ -13,35 +12,18 @@ let GalleryDeleteModal
 let galleryMock
 
 before(async () => {
-  server = await createServer({
-    server: { middlewareMode: true, watch: null },
-    appType: 'custom',
+  const modules = await loadSsrModules('gallery', {
+    App: 'src/App.tsx',
+    GalleryDetailModal: 'src/pages/gallery/GalleryDetailModal.tsx',
+    GalleryPhotoFormModal: 'src/pages/gallery/GalleryPhotoFormModal.tsx',
+    GalleryDeleteModal: 'src/pages/gallery/GalleryDeleteModal.tsx',
+    galleryMock: 'src/pages/gallery/galleryMock.ts',
   })
-  App = (await server.ssrLoadModule('/src/App.tsx')).default
-  GalleryDetailModal = (
-    await server.ssrLoadModule(
-      '/src/pages/gallery/GalleryDetailModal.tsx',
-    )
-  ).GalleryDetailModal
-  GalleryPhotoFormModal = (
-    await server.ssrLoadModule(
-      '/src/pages/gallery/GalleryPhotoFormModal.tsx',
-    )
-  ).GalleryPhotoFormModal
-  GalleryDeleteModal = (
-    await server.ssrLoadModule(
-      '/src/pages/gallery/GalleryDeleteModal.tsx',
-    )
-  ).GalleryDeleteModal
-  galleryMock = (
-    await server.ssrLoadModule(
-      '/src/pages/gallery/galleryMock.ts',
-    )
-  ).galleryMock
-})
-
-after(async () => {
-  await server?.close()
+  App = modules.App.default
+  GalleryDetailModal = modules.GalleryDetailModal.GalleryDetailModal
+  GalleryPhotoFormModal = modules.GalleryPhotoFormModal.GalleryPhotoFormModal
+  GalleryDeleteModal = modules.GalleryDeleteModal.GalleryDeleteModal
+  galleryMock = modules.galleryMock.galleryMock
 })
 
 function renderPath(path) {

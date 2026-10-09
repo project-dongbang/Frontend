@@ -1,5 +1,7 @@
-import { useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { AppLayout } from '../../components/layout/AppLayout'
+import { PATHS } from '../../routes/paths'
 
 const navItems = [
   { label: '대시보드', icon: 'home' },
@@ -10,14 +12,29 @@ const navItems = [
 ]
 
 export function ClubShell({ children, member = false }: { children: ReactNode; member?: boolean }) {
-  const [activeNav, setActiveNav] = useState('동아리 관리')
+  const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const settingsActive = /^\/clubs\/[^/]+\/settings$/.test(pathname)
+  const navPaths: Record<string, string> = {
+    '대시보드': PATHS.dashboard,
+    '동아리 관리': PATHS.members,
+    '일정 · 행사': PATHS.calendar,
+    '출석 관리': PATHS.attendance,
+    '회비 관리': PATHS.fees,
+  }
+  const activeNav = settingsActive
+    ? ''
+    : navItems.find((item) => navPaths[item.label] === pathname)?.label ?? ''
 
   return (
     <div className="club-app-shell">
       <AppLayout
         activeNav={activeNav}
-        onNavChange={setActiveNav}
-        settingsActive
+        onNavChange={(label) => {
+          const path = navPaths[label]
+          if (path) navigate(`${path}${member ? '?role=member' : ''}`)
+        }}
+        settingsActive={settingsActive}
         navItems={navItems}
         organizationName="D.Log 개발동아리"
         userName={member ? '남은우' : '김동방'}

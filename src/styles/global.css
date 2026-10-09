@@ -33,7 +33,14 @@ main { min-height: 100vh; margin-left: 232px; padding: 96px 38px 48px; }.content
 .organization-switcher i { display: grid; width: 14px; height: 14px; place-items: center; font-size: 15px; font-style: normal; line-height: 1; transform: translateY(-1px); }
 .sidebar:hover .sidebar-help { display: block; }
 
+/* 페이지 상단 버튼의 크기와 콘텐츠 정렬을 통일합니다. */
+.page-header { align-items: center; }
+.page-header-actions { align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+.page-header-action { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; line-height: 1.2; text-align: center; white-space: nowrap; }
+.page-header > :only-child { display: block; }
+
 /* 하나의 사이드바 내비게이션을 데스크톱과 모바일에서 함께 사용합니다. */
+.sidebar-settings button { font-size: 12px; font-weight: 600; }
 .brand { padding: 0; border: 0; background: transparent; }
 .mobile-nav-backdrop, .sidebar-organization { display: none; }
 
@@ -70,7 +77,10 @@ main { min-height: 100vh; margin-left: 232px; padding: 96px 38px 48px; }.content
   .sidebar-settings { margin-top: 16px; }
   .sidebar-help, .sidebar:hover .sidebar-help { display: none; }
   main { margin-left: 0; padding: 80px 16px 32px; }
+  .page-header { align-items: stretch; }
   .page-header > :last-child { display: grid; width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .page-header-actions:has(> :only-child) { grid-template-columns: 1fr; }
+  .page-header > :only-child { display: block; }
   .page-header > :last-child .button { width: 100%; min-width: 0; padding-inline: 10px; }
   .modal-backdrop .modal header > button { width: 44px; height: 44px; flex: 0 0 44px; }
 }
@@ -82,8 +92,9 @@ main { min-height: 100vh; margin-left: 232px; padding: 96px 38px 48px; }.content
 
 @media (min-width: 761px) {
   .page-header-action {
-    width: 132px;
-    flex: 0 0 132px;
+    width: auto;
+    min-width: 132px;
+    flex: 0 0 auto;
   }
 }
 
