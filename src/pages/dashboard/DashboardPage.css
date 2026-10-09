@@ -1,6 +1,7 @@
 .dashboard-create-button { gap: 8px; }
 .dashboard-create-button img { width: 17px; height: 17px; }
-.dashboard-fee-button { border-color: #ff9a87; color: #d9553d; }
+.dashboard-fee-button { border-color: #ff9a87; color: #d9553d; white-space: nowrap; }
+@media (max-width: 760px) { .dashboard-fee-button { padding-inline: 8px; font-size: 12px; } }
 .content:has(.dashboard-overview) { max-width: 948px; }
 @media (min-width: 1440px) { .content:has(.dashboard-overview) { max-width: 1280px; } }
 .dashboard-overview { display: grid; grid-template-columns: 395fr 535fr; gap: 18px; align-items: start; }

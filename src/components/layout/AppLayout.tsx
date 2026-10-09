@@ -134,7 +134,7 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
       return
     }
 
-    if (activeOrganization) navigate(`/clubs/${activeOrganization.organizationId}/settings`)
+    navigate(activeOrganization ? `/clubs/${activeOrganization.organizationId}/settings` : '/clubs')
   }
 
   return (

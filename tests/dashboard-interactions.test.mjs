@@ -27,12 +27,21 @@ function renderPath(path) {
   )
 }
 
-test('the admin dashboard renders all four navigation actions', () => {
+test('the admin dashboard renders action labels without a placeholder glyph', () => {
   const html = renderPath('/dashboard')
 
   assert.match(html, /납부 항목 등록/)
   assert.match(html, /행사 만들기/)
+  assert.doesNotMatch(html, /▣/)
   assert.equal((html.match(/전체 보기 →/g) ?? []).length, 2)
+})
+
+test('the settings route does not select another sidebar menu', () => {
+  const html = renderPath('/clubs/1/settings')
+  const navigation = html.match(/<nav aria-label="서비스 메뉴">([\s\S]*?)<\/nav>/)?.[1]
+
+  assert.ok(navigation)
+  assert.doesNotMatch(navigation, /class="active"|aria-current="page"/)
 })
 
 test('the sidebar is the only global navigation and exposes mobile controls', () => {

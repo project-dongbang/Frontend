@@ -16,6 +16,7 @@ export function ClubShell({ children, member = false }: { children: ReactNode; m
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const { activeOrganization, user } = useSession()
+  const settingsActive = /^\/clubs\/[^/]+\/settings$/.test(pathname)
   const navPaths: Record<string, string> = {
     '대시보드': PATHS.dashboard,
     '동아리 관리': PATHS.members,
@@ -23,7 +24,9 @@ export function ClubShell({ children, member = false }: { children: ReactNode; m
     '출석 관리': PATHS.attendance,
     '회비 관리': PATHS.fees,
   }
-  const activeNav = navItems.find((item) => navPaths[item.label] === pathname)?.label ?? ''
+  const activeNav = settingsActive
+    ? ''
+    : navItems.find((item) => navPaths[item.label] === pathname)?.label ?? ''
 
   return (
     <div className="club-app-shell">
@@ -33,7 +36,7 @@ export function ClubShell({ children, member = false }: { children: ReactNode; m
           const path = navPaths[label]
           if (path) navigate(path)
         }}
-        settingsActive={pathname.endsWith('/settings')}
+        settingsActive={settingsActive}
         navItems={navItems}
         organizationName={activeOrganization?.name ?? '동아리를 선택해 주세요'}
         userName={user?.name ?? '사용자'}
