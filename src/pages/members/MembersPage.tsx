@@ -10,7 +10,6 @@ import { MemberInviteModal } from './MemberInviteModal'
 import { filterMembers, membersToCsv } from './memberModel'
 import type { Member, MemberRole } from './memberModel'
 import type { MemberInfoUpdate } from './MemberFormModal'
-import { membersMock } from './membersMock'
 import './members.css'
 import { organizationApi } from '../../api/services'
 import { errorMessage } from '../../api/client'
@@ -19,8 +18,8 @@ import { useSession } from '../../context/SessionContext'
 export function MembersPage() {
   const [params, setParams] = useSearchParams()
   const { activeOrganization, refresh } = useSession()
-  const isMember = activeOrganization?.myRole === 'MEMBER' || params.get('role') === 'member'
-  const [members, setMembers] = useState<Member[]>(membersMock)
+  const isMember = activeOrganization?.myRole === 'MEMBER'
+  const [members, setMembers] = useState<Member[]>([])
   const [membersOrganizationId, setMembersOrganizationId] = useState<number | null>(null)
   const [query, setQuery] = useState('')
   const [generation, setGeneration] = useState('')
@@ -30,7 +29,7 @@ export function MembersPage() {
   const tableRegion = useRef<HTMLDivElement>(null)
   const currentMembers = activeOrganization
     ? membersOrganizationId === activeOrganization.organizationId ? members : []
-    : membersMock
+    : []
   const visibleMembers = filterMembers(currentMembers, query, generation)
   const generations = [...new Set(currentMembers.map((member) => member.generation))].sort((a, b) => parseInt(a) - parseInt(b))
   const staffCount = currentMembers.filter((member) => member.role !== '일반 회원' && member.status === '활동').length

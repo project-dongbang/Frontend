@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { Badge, Button, Card } from '../../components/common'
 import { PATHS } from '../../routes/paths'
 import { dashboardApi } from '../../api/services'
@@ -9,11 +9,10 @@ import { useSession } from '../../context/SessionContext'
 
 export function DashboardOverview({ role = 'admin' }: { role?: 'admin' | 'member' }) {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
   const { activeOrganization, user } = useSession()
   const [data, setData] = useState<DashboardData | null>(null)
   const [error, setError] = useState('')
-  const roleQuery = searchParams.get('role') === 'member' ? '?role=member' : ''
+  const visibleData = data?.organizationId === activeOrganization?.organizationId ? data : null
 
   useEffect(() => {
     if (!activeOrganization || !user) return
@@ -24,14 +23,14 @@ export function DashboardOverview({ role = 'admin' }: { role?: 'admin' | 'member
     return () => { active = false }
   }, [activeOrganization, user, role])
 
-  const stats = data ? [
-    ['활동 멤버', `${data.stats.activeMemberCount}명`],
-    ['이번 달 일정', `${data.stats.thisMonthEventCount}개`],
-    ['행사 출석률', `${Math.round(data.stats.attendanceRate)}%`],
-    ['납부율', `${Math.round(data.stats.paymentRate)}%`],
+  const stats = visibleData ? [
+    ['활동 멤버', `${visibleData.stats.activeMemberCount}명`],
+    ['이번 달 일정', `${visibleData.stats.thisMonthEventCount}개`],
+    ['행사 출석률', `${Math.round(visibleData.stats.attendanceRate)}%`],
+    ['납부율', `${Math.round(visibleData.stats.paymentRate)}%`],
   ] : [['활동 멤버', '-'], ['이번 달 일정', '-'], ['행사 출석률', '-'], ['납부율', '-']]
 
-  return <>{error && <p role="alert">{error}</p>}<section className="dashboard-overview" aria-label="동아리 대시보드"><div className="dashboard-left-column"><section className="dashboard-stat-grid" aria-label="동아리 현황">{stats.map(([label, value]) => <article className="dashboard-stat-card" key={label}><span>{label}</span><strong>{value}</strong></article>)}</section><UpcomingScheduleCard schedules={data?.upcomingSchedules ?? []} onViewAll={() => navigate(`${PATHS.calendar}${roleQuery}`)} /></div><AlbumCard photos={data?.recentPhotos ?? []} onViewAll={() => navigate(`${PATHS.gallery}${roleQuery}`)} /></section></>
+  return <>{error && <p role="alert">{error}</p>}<section className="dashboard-overview" aria-label="동아리 대시보드"><div className="dashboard-left-column"><section className="dashboard-stat-grid" aria-label="동아리 현황">{stats.map(([label, value]) => <article className="dashboard-stat-card" key={label}><span>{label}</span><strong>{value}</strong></article>)}</section><UpcomingScheduleCard schedules={visibleData?.upcomingSchedules ?? []} onViewAll={() => navigate(PATHS.calendar)} /></div><AlbumCard photos={visibleData?.recentPhotos ?? []} onViewAll={() => navigate(PATHS.gallery)} /></section></>
 }
 
 function UpcomingScheduleCard({ schedules, onViewAll }: { schedules: DashboardData['upcomingSchedules']; onViewAll: () => void }) {
@@ -39,5 +38,5 @@ function UpcomingScheduleCard({ schedules, onViewAll }: { schedules: DashboardDa
 }
 
 function AlbumCard({ photos, onViewAll }: { photos: DashboardData['recentPhotos']; onViewAll: () => void }) {
-  return <Card title="동아리 사진첩" description="동아리의 활동 기록을 최대 4장으로 보여줘요." action={<Button variant="ghost" onClick={onViewAll}>전체 보기 →</Button>} className="album-card"><div className="album-grid">{photos.map((photo) => <article className="album-item" style={{ backgroundImage: `url(${photo.imageUrl})`, backgroundSize: 'cover' }} key={photo.photoId}><span>{photo.title}</span></article>)}{photos.length === 0 && <article className="album-item album-logo" aria-label="사진 없음"><strong>사진 없음</strong></article>}</div></Card>
+  return <Card title="동아리 사진첩" description="동아리의 활동 기록을 최대 4장으로 보여줘요." action={<Button variant="ghost" onClick={onViewAll}>전체 보기 →</Button>} className="album-card"><div className="album-grid">{photos.map((photo) => <article className="album-item" key={photo.photoId}><img src={photo.imageUrl} alt={photo.title} /><span>{photo.title}</span></article>)}{photos.length === 0 && <article className="album-item album-logo" aria-label="사진 없음"><strong>사진 없음</strong></article>}</div></Card>
 }

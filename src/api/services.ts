@@ -1,5 +1,5 @@
 import { apiRequest, apiUrl } from './client'
-import type { ApiMember, AuthUser, CalendarEvent, DashboardData, Notification, Organization, Profile } from './types'
+import type { ApiMember, AuthUser, CalendarEvent, DashboardData, Notification, Organization, PhotoDetail, PhotoListItem, Profile } from './types'
 
 export const authApi = {
   csrf: () => apiRequest<{ token: string; headerName: string }>('/api/v1/auth/csrf'),
@@ -98,10 +98,20 @@ export const feesApi = {
 }
 
 export const photoApi = {
-  list: (organizationId: number, userId: number) => apiRequest<{ content: Array<Record<string, unknown>> }>(`/api/v1/organizations/${organizationId}/photos?userId=${userId}&size=100`),
-  detail: (organizationId: number, photoId: string | number, userId: number) => apiRequest<Record<string, unknown>>(`/api/v1/organizations/${organizationId}/photos/${photoId}?userId=${userId}`),
-  create: (organizationId: number, userId: number, uploadedFileId: number, title: string) => apiRequest<Record<string, unknown>>(`/api/v1/organizations/${organizationId}/photos?userId=${userId}`, { method: 'POST', body: { uploadedFileId, title } }),
-  update: (organizationId: number, photoId: string | number, userId: number, title: string) => apiRequest(`/api/v1/organizations/${organizationId}/photos/${photoId}?userId=${userId}`, { method: 'PATCH', body: { title } }),
-  replaceImage: (organizationId: number, photoId: string | number, uploadedFileId: number, title?: string) => { const body = new FormData(); body.append('uploadedFileId', String(uploadedFileId)); const query = title ? `?title=${encodeURIComponent(title)}` : ''; return apiRequest(`/api/v1/organizations/${organizationId}/photos/${photoId}/image${query}`, { method: 'PATCH', body }) },
-  remove: (organizationId: number, photoId: string | number, userId: number) => apiRequest(`/api/v1/organizations/${organizationId}/photos/${photoId}?userId=${userId}`, { method: 'DELETE' }),
+  list: (organizationId: number, cursor?: number) => apiRequest<{ content: PhotoListItem[]; hasNext: boolean; nextCursor: number | null }>(`/api/v1/organizations/${organizationId}/photos?size=100${cursor ? `&cursor=${cursor}` : ''}`),
+  detail: (organizationId: number, photoId: string | number) => apiRequest<PhotoDetail>(`/api/v1/organizations/${organizationId}/photos/${photoId}`),
+  create: (organizationId: number, file: File, title?: string) => {
+    const body = new FormData()
+    body.append('file', file)
+    if (title) body.append('title', title)
+    return apiRequest<PhotoDetail>(`/api/v1/organizations/${organizationId}/photos`, { method: 'POST', body })
+  },
+  update: (organizationId: number, photoId: string | number, title: string) => apiRequest<PhotoDetail>(`/api/v1/organizations/${organizationId}/photos/${photoId}`, { method: 'PATCH', body: { title } }),
+  replaceImage: (organizationId: number, photoId: string | number, file: File, title?: string) => {
+    const body = new FormData()
+    body.append('file', file)
+    if (title) body.append('title', title)
+    return apiRequest<PhotoDetail>(`/api/v1/organizations/${organizationId}/photos/${photoId}/image`, { method: 'PATCH', body })
+  },
+  remove: (organizationId: number, photoId: string | number) => apiRequest(`/api/v1/organizations/${organizationId}/photos/${photoId}`, { method: 'DELETE' }),
 }

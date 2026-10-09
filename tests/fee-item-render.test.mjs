@@ -2,17 +2,14 @@ import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { createServer } from 'vite'
+import { createRenderLoader } from './render-loader.mjs'
 
 let server
 let FeeItemModal
 let feeCollections
 
 before(async () => {
-  server = await createServer({
-    server: { middlewareMode: true, watch: null },
-    appType: 'custom',
-  })
+  server = createRenderLoader()
   FeeItemModal = (
     await server.ssrLoadModule(
       '/src/pages/fees/components/FeeItemModal.tsx',
@@ -61,5 +58,9 @@ test('the create modal keeps registration copy without deletion', () => {
 
   assert.match(html, /납부 항목 등록/)
   assert.match(html, /회비 등록하기/)
+  assert.match(html, /선택 인원<strong>0명/)
+  assert.match(html, /예상 총 납부액<strong>₩ 0/)
+  assert.match(html, /placeholder="예: 2026년 2학기 정기 납부" value=""/)
+  assert.doesNotMatch(html, /2,560,000/)
   assert.doesNotMatch(html, /항목 삭제/)
 })

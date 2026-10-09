@@ -37,7 +37,7 @@ export function ExpenseCreateModal({
   const [merchant, setMerchant] = useState('')
   const [category, setCategory] = useState('')
   const [paymentMethod, setPaymentMethod] =
-    useState('동아리 카드')
+    useState('')
   const [memo, setMemo] = useState('')
   const [error, setError] = useState('')
   const [recognizing, setRecognizing] = useState(false)

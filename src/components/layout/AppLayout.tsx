@@ -1,8 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import {
-  useNavigate,
-  useSearchParams,
-} from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { BellIcon, CalendarIcon, CheckIcon, GalleryIcon, HomeIcon, MenuIcon, SettingsIcon, UsersIcon, WalletIcon } from '../icons'
 import { MyPageModals } from './MyPageModals'
 import { HelpGuideModal } from './HelpGuideModal'
@@ -23,7 +20,6 @@ type AppLayoutProps = {
   showSettings?: boolean
   organizationName: string
   userName: string
-  notificationCount?: number
 }
 
 const icons = {
@@ -35,42 +31,36 @@ const icons = {
   gallery: GalleryIcon,
 }
 
-const initialNotifications: NotificationItem[] = [
-  { id: 'payment', title: '현재 납부 항목을 아직 납부하지 않은 멤버가 6명 있어요.', date: '9월 3일 · 새 알림', path: '/fees', unread: true },
-  { id: 'event', title: '9월 5일 신입 부원 환영 네트워킹을 준비해 주세요.', date: '9월 3일 · 새 알림', path: '/calendar', unread: true },
-  { id: 'attendance', title: '개강 총회 출석 명단을 확인할 수 있어요.', date: '9월 1일 · 새 알림', path: '/attendance', unread: true },
-]
-
-export function AppLayout({ children, navItems, activeNav, onNavChange, onOrganizationClick, onSettingsClick, settingsActive = false, showSettings = navItems.length === 5, organizationName, userName, notificationCount = initialNotifications.length }: AppLayoutProps) {
+export function AppLayout({ children, navItems, activeNav, onNavChange, onOrganizationClick, onSettingsClick, settingsActive = false, showSettings = navItems.length === 5, organizationName, userName }: AppLayoutProps) {
   const { activeOrganization } = useSession()
   const navigate = useNavigate()
-  const [params] = useSearchParams()
-  const isMember = params.get('role') === 'member'
   const [menuOpen, setMenuOpen] = useState(false)
   const mobileMenuButtonRef = useRef<HTMLButtonElement>(null)
   const sidebarRef = useRef<HTMLElement>(null)
   const [myPageMode, setMyPageMode] = useState<'profile' | 'activity' | null>(null)
   const [helpGuideOpen, setHelpGuideOpen] = useState(false)
   const [notificationOpen, setNotificationOpen] = useState(false)
-  const [notifications, setNotifications] = useState(() =>
-    initialNotifications.slice(0, notificationCount),
-  )
+  const [notificationState, setNotificationState] = useState<{ organizationId: number | null; items: NotificationItem[] }>({ organizationId: null, items: [] })
+  const notifications = notificationState.organizationId === activeOrganization?.organizationId ? notificationState.items : []
   const [savedDisplayName, setSavedDisplayName] = useState<string | null>(null)
   const displayName = savedDisplayName ?? userName
   const unreadCount = notifications.filter((notification) => notification.unread).length
-  const dashboardPath = isMember ? '/dashboard?role=member' : '/dashboard'
+  const dashboardPath = '/dashboard'
   useEffect(() => {
     if (!activeOrganization) return
+    let cancelled = false
     notificationApi.list(activeOrganization.organizationId).then((response) => {
+      if (cancelled) return
       const pathByType: Record<string, string> = { EVENT: '/calendar', FEE_ITEM: '/fees', ATTENDANCE_SESSION: '/attendance' }
-      setNotifications((response.content ?? []).map((item) => ({
+      setNotificationState({ organizationId: activeOrganization.organizationId, items: (response.content ?? []).map((item) => ({
         id: String(item.notificationId),
         title: item.message || item.title,
         date: `${new Date(item.sentAt).toLocaleDateString('ko-KR')} ${item.isRead ? '· 읽음' : '· 새 알림'}`,
         path: pathByType[item.referenceType] ?? '/dashboard',
         unread: !item.isRead,
-      })))
-    }).catch(() => {})
+      })) })
+    }).catch(() => { if (!cancelled) setNotificationState({ organizationId: activeOrganization.organizationId, items: [] }) })
+    return () => { cancelled = true }
   }, [activeOrganization])
   const closeMobileMenu = (restoreFocus = false) => {
     setMenuOpen(false)
@@ -135,7 +125,7 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
       return
     }
 
-    navigate(isMember ? '/clubs?role=member' : '/clubs')
+    navigate('/clubs')
   }
   const handleSettingsClick = () => {
     closeMobileMenu()
@@ -144,7 +134,7 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
       return
     }
 
-    navigate('/clubs/dlog/settings')
+    if (activeOrganization) navigate(`/clubs/${activeOrganization.organizationId}/settings`)
   }
 
   return (
@@ -170,7 +160,7 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
           <span><strong>{organizationName}</strong><small>동아리 전환</small></span>
           <i aria-hidden="true">›</i>
         </button>
-        <span className="semester">2026 · 2학기</span>
+        <span className="semester">동아리 운영</span>
         <nav aria-label="서비스 메뉴">
           {navItems.map(({ label, icon }) => {
             const NavIcon = icons[icon as keyof typeof icons]
@@ -209,13 +199,13 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
         onClose={() => setNotificationOpen(false)}
         onMarkAllRead={() => {
           if (activeOrganization) void notificationApi.readAll(activeOrganization.organizationId)
-          setNotifications((items) => items.map((item) => ({ ...item, unread: false })))
+          setNotificationState((current) => ({ ...current, items: current.items.map((item) => ({ ...item, unread: false })) }))
         }}
         onNotificationClick={(id, path) => {
           void notificationApi.read(Number(id)).catch(() => {})
-          setNotifications((items) => items.map((item) => item.id === id ? { ...item, unread: false } : item))
+          setNotificationState((current) => ({ ...current, items: current.items.map((item) => item.id === id ? { ...item, unread: false } : item) }))
           setNotificationOpen(false)
-          navigate(`${path}${isMember ? '?role=member' : ''}`)
+          navigate(path)
         }}
       />
     </div>

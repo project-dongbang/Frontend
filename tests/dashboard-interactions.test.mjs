@@ -3,16 +3,13 @@ import assert from 'node:assert/strict'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
-import { createServer } from 'vite'
+import { createRenderLoader } from './render-loader.mjs'
 
 let server
 let App
 
 before(async () => {
-  server = await createServer({
-    server: { middlewareMode: true, watch: null },
-    appType: 'custom',
-  })
+  server = createRenderLoader()
   App = (await server.ssrLoadModule('/src/App.tsx')).default
 })
 
@@ -59,10 +56,11 @@ test('dashboard creation deep links open their target dialogs', () => {
   assert.match(schedule, /일정 등록/)
 })
 
-test('the club chooser preserves the member dashboard context', () => {
+test('the club chooser renders without a fictitious member identity', () => {
   const html = renderPath('/clubs?role=member')
 
-  assert.match(html, /안녕하세요, 남은우님/)
+  assert.match(html, /안녕하세요, 회원님/)
+  assert.doesNotMatch(html, /남은우/)
   assert.match(html, /role="dialog"/)
   assert.match(html, /aria-label="닫기"/)
 })

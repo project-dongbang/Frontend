@@ -1,8 +1,6 @@
 import { useMemo, useState } from 'react'
 
-import { feePaymentMembers, type FeeCategory, type FeePaymentMember } from '../feesMock'
-
-type MemberSort = 'name' | 'joinedAt' | 'role'
+import type { FeeCategory, FeePaymentMember } from '../feesMock'
 
 type FeeMemberPickerModalProps = {
   category: FeeCategory
@@ -11,52 +9,18 @@ type FeeMemberPickerModalProps = {
   members?: FeePaymentMember[]
 }
 
-const getJoinedAt = (memberId: string) => {
-  const number =
-    Number(memberId.replace(/\D/g, '')) || 0
-
-  const month = (number % 8) + 1
-  const day = (number % 25) + 1
-
-  return `2026-${String(month).padStart(
-    2,
-    '0',
-  )}-${String(day).padStart(2, '0')}`
-}
-
 export function FeeMemberPickerModal({
   category,
   onClose,
   onSave,
-  members = feePaymentMembers,
+  members = [],
 }: FeeMemberPickerModalProps) {
   const [selectedIds, setSelectedIds] =
     useState<string[]>(category.memberIds)
 
-  const [sort, setSort] =
-    useState<MemberSort>('name')
-
   const sortedMembers = useMemo(() => {
-    const list = [...members]
-
-    if (sort === 'name') {
-      return list.sort((a, b) =>
-        a.name.localeCompare(b.name, 'ko'),
-      )
-    }
-
-    if (sort === 'joinedAt') {
-      return list.sort((a, b) =>
-        getJoinedAt(b.id).localeCompare(
-          getJoinedAt(a.id),
-        ),
-      )
-    }
-
-    // 현재 mock에는 role 정보가 없으므로
-    // API 연결 전까지 기존 순서 유지
-    return list
-  }, [sort, members])
+    return [...members].sort((a, b) => a.name.localeCompare(b.name, 'ko'))
+  }, [members])
 
   const toggleMember = (memberId: string) => {
     setSelectedIds((current) =>
@@ -118,28 +82,6 @@ export function FeeMemberPickerModal({
             </p>
 
             <div className="category-picker-actions">
-              <select
-                value={sort}
-                onChange={(event) =>
-                  setSort(
-                    event.target.value as MemberSort,
-                  )
-                }
-                aria-label="대상 회원 정렬"
-              >
-                <option value="name">
-                  이름순
-                </option>
-
-                <option value="joinedAt">
-                  가입 날짜 순
-                </option>
-
-                <option value="role">
-                  직책 순
-                </option>
-              </select>
-
               <button
                 type="button"
                 className="fees-secondary-btn"
