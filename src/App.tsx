@@ -14,6 +14,14 @@ import { GalleryPage } from './pages/gallery/GalleryPage'
 import { MembersPage } from './pages/members/MembersPage'
 import { FeesPage } from './pages/fees/FeesPage'
 import { PATHS } from './routes/paths'
+import { useSession } from './context/SessionContext'
+
+function HomeRedirect() {
+  const { user, activeOrganization, loading } = useSession()
+  if (loading) return <main role="status">로그인 정보를 확인하고 있어요…</main>
+  const destination = !user ? PATHS.login : user.onboardingRequired ? PATHS.signup : activeOrganization ? PATHS.dashboard : PATHS.clubs
+  return <Navigate to={destination} replace />
+}
 
 function App() {
   return (
@@ -34,8 +42,8 @@ function App() {
       <Route path={PATHS.joinClub} element={<ClubJoinPage />} />
       <Route path={PATHS.clubSettings} element={<ClubSettingsPage />} />
 
-      <Route path="/" element={<Navigate to={PATHS.login} replace />} />
-      <Route path="*" element={<Navigate to={PATHS.login} replace />} />
+      <Route path="/" element={<HomeRedirect />} />
+      <Route path="*" element={<HomeRedirect />} />
     </Routes>
   )
 }

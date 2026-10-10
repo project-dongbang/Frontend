@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Badge, Button, Card, EmptyState, PageHeader, Select } from '../../components/common'
+import { Button, Card, EmptyState, PageHeader, Select } from '../../components/common'
 import addIcon from '../../assets/dashboard-add.svg'
 import searchIcon from '../../assets/member-search.svg'
 import { DashboardShell } from '../dashboard/DashboardShell'
@@ -49,7 +49,6 @@ export function MembersPage() {
           position: member.position ?? '',
           role: member.role === 'OWNER' ? '회장' : member.role === 'ADMIN' ? '운영진' : '일반 회원',
           status: member.status === 'ACTIVE' ? '활동' : member.status === 'INACTIVE' ? '휴면' : '탈퇴',
-          payment: '확인 필요',
         })))
         setNotice('')
       })
@@ -113,7 +112,7 @@ export function MembersPage() {
       await organizationApi.delegateOwner(activeOrganization.organizationId, Number(member.id))
       await refresh()
       const { members: apiMembers } = await organizationApi.members(activeOrganization.organizationId)
-      setMembers(apiMembers.map((item) => ({ id: String(item.membershipId), name: item.memberName, studentId: item.studentNumber, generation: item.generation || '-', position: item.position ?? '', role: item.role === 'OWNER' ? '회장' : item.role === 'ADMIN' ? '운영진' : '일반 회원', status: item.status === 'ACTIVE' ? '활동' : item.status === 'INACTIVE' ? '휴면' : '탈퇴', payment: '확인 필요' })))
+      setMembers(apiMembers.map((item) => ({ id: String(item.membershipId), name: item.memberName, studentId: item.studentNumber, generation: item.generation || '-', position: item.position ?? '', role: item.role === 'OWNER' ? '회장' : item.role === 'ADMIN' ? '운영진' : '일반 회원', status: item.status === 'ACTIVE' ? '활동' : item.status === 'INACTIVE' ? '휴면' : '탈퇴' })))
       setNotice(`${member.name}님에게 대표 권한을 위임했어요.`)
     } catch (error) { setNotice(errorMessage(error)) }
   }
@@ -144,13 +143,12 @@ export function MembersPage() {
           </div>}>
           {visibleMembers.length ? <div ref={tableRegion} className="members-table-scroll" role="region" aria-label="멤버 목록" tabIndex={0}>
             <table className="members-table">
-              <caption className="members-sr-only">멤버 이름, 학번, 기수, 역할, 납부 및 활동 상태</caption>
-              <colgroup><col className="member-col-name" /><col className="member-col-generation" /><col className="member-col-role" /><col className="member-col-payment" /><col className="member-col-status" /><col /></colgroup>
-              <thead><tr>{['멤버', '기수', '역할', '납부', '상태', '관리'].map((label) => <th key={label} scope="col">{label}</th>)}</tr></thead>
+              <caption className="members-sr-only">멤버 이름, 학번, 기수, 역할 및 활동 상태</caption>
+              <colgroup><col className="member-col-name" /><col className="member-col-generation" /><col className="member-col-role" /><col className="member-col-status" /><col /></colgroup>
+              <thead><tr>{['멤버', '기수', '역할', '상태', '관리'].map((label) => <th key={label} scope="col">{label}</th>)}</tr></thead>
               <tbody>{visibleMembers.map((member) => <tr key={member.id}>
                 <td><div className="member-identity"><span className="member-avatar" aria-hidden="true">{member.name.slice(0, 1)}</span><div><strong>{member.name}</strong><span>{member.studentId}</span></div></div></td>
                 <td>{member.generation}</td><td>{member.position || member.role}</td>
-                <td><Badge tone={member.payment === '납부 완료' ? 'success' : member.payment === '미납' ? 'warning' : 'neutral'}>{member.payment}</Badge></td>
                 <td>{member.status}</td>
                 <td><div className="member-row-actions">
                   {member.status !== '탈퇴' && <Button variant="ghost" aria-label={`${member.name} ${member.studentId} 정보 수정`} onClick={() => { setNotice(''); setEditingMember(member) }}>정보 수정</Button>}

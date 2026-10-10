@@ -8,12 +8,14 @@ import { createRenderLoader } from './render-loader.mjs'
 let server
 let App
 let CalendarGrid
+let ScheduleDetailModal
 let calendarLocalDateTime
 
 before(async () => {
   server = createRenderLoader()
   App = (await server.ssrLoadModule('/src/App.tsx')).default
   CalendarGrid = (await server.ssrLoadModule('/src/pages/schedule/CalendarGrid.tsx')).CalendarGrid
+  ScheduleDetailModal = (await server.ssrLoadModule('/src/pages/schedule/ScheduleDetailModal.tsx')).ScheduleDetailModal
   calendarLocalDateTime = (await server.ssrLoadModule('/src/pages/schedule/calendarDate.ts')).calendarLocalDateTime
 })
 
@@ -82,6 +84,18 @@ test('the calendar shows a multiday item only on its start and end dates', () =>
   assert.match(html, /시작 14:54 장기 행사/)
   assert.match(html, /종료 17:00 장기 행사/)
   assert.equal(calendarLocalDateTime('2026-10-09T05:54:00Z'), '2026-10-09T14:54')
+})
+
+test('an existing event application is shown as cancellable when detail is reopened', () => {
+  const html = renderToStaticMarkup(createElement(ScheduleDetailModal, {
+    open: true,
+    item: { id: '42', title: '참가 중인 행사', type: 'event', start: '2099-10-09T14:00', end: '2099-10-09T16:00', participating: true, canApply: false, canCancel: true, registered: 3 },
+    isMember: true,
+    onClose() {}, onEditRequest() {}, onDeleteRequest() {}, onEarlyCloseRequest() {}, onParticipantEditRequest() {}, onAttendanceRequest() {},
+  }))
+  assert.match(html, /3명/)
+  assert.match(html, /참가 신청 취소/)
+  assert.match(html, /<button[^>]*>참가 신청 취소<\/button>/)
 })
 
 test('the club chooser renders without a fictitious member identity', () => {

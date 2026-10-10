@@ -34,7 +34,7 @@ export function DashboardOverview({ role = 'admin' }: { role?: 'admin' | 'member
 }
 
 function UpcomingScheduleCard({ schedules, onViewAll }: { schedules: DashboardData['upcomingSchedules']; onViewAll: () => void }) {
-  return <Card title="다가오는 일정" description="아래로 스크롤해 전체 일정을 확인하세요." action={<Button variant="ghost" onClick={onViewAll}>전체 보기 →</Button>} className="upcoming-card"><ul className="dashboard-schedule-list">{schedules.map((schedule) => <li className="dashboard-schedule-item" key={`${schedule.day}-${schedule.title}`}><div className="dashboard-date"><strong>{schedule.day}</strong><span>{schedule.month}월</span></div><i aria-hidden="true" /><div className="dashboard-schedule-copy"><strong>{schedule.title}</strong><span>{schedule.detail}</span></div><Badge tone="neutral">{schedule.status}</Badge></li>)}</ul><p className="schedule-scroll-note">스크롤 시 이후 일정이 이어집니다.</p></Card>
+  return <Card title="다가오는 일정" description="예정된 동아리 일정을 확인하세요." action={<Button variant="ghost" onClick={onViewAll}>전체 보기 →</Button>} className="upcoming-card">{schedules.length > 0 ? <ul className="dashboard-schedule-list">{schedules.map((schedule) => <li className="dashboard-schedule-item" key={schedule.eventId}><div className="dashboard-date"><strong>{schedule.day}</strong><span>{schedule.month}월</span></div><i aria-hidden="true" /><div className="dashboard-schedule-copy"><strong>{schedule.title}</strong><span>{schedule.detail}</span></div><Badge tone="neutral">{schedule.status}</Badge></li>)}</ul> : <p className="dashboard-empty-note">다가오는 일정이 없어요. 전체 보기에서 일정을 확인할 수 있어요.</p>}</Card>
 }
 
 function AlbumCard({ photos, onViewAll }: { photos: DashboardData['recentPhotos']; onViewAll: () => void }) {

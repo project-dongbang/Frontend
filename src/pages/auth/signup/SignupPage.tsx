@@ -7,7 +7,7 @@ import { authApi } from '../../../api/services'
 import { errorMessage } from '../../../api/client'
 import { useSession } from '../../../context/SessionContext'
 import './SignupPage.css'
-import { getAuthReturnPath } from '../../../routes/authReturn'
+import { clearAuthReturnPath, getPostAuthDestination } from '../../../routes/authReturn'
 
 type SignupForm = {
   name: string
@@ -64,7 +64,7 @@ export function SignupPage() {
         email,
       })
       await refresh()
-      navigate(getAuthReturnPath())
+      navigate(getPostAuthDestination(), { replace: true })
     } catch (error) {
       setSubmitError(errorMessage(error))
     } finally {
@@ -74,7 +74,7 @@ export function SignupPage() {
 
   return (
     <ClubBackdrop>
-      <Modal open title="가입 정보 입력" className="signup-modal" onClose={() => navigate(PATHS.login)}>
+      <Modal open title="가입 정보 입력" className="signup-modal" onClose={() => { clearAuthReturnPath(); navigate(PATHS.login) }}>
         <p className="signup-description">동아리 활동에 사용할 이름, 학번, 학과를 입력해 주세요.</p>
         <form className="signup-form" onSubmit={submit} noValidate>
           <div className="signup-form-grid">

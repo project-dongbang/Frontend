@@ -21,20 +21,38 @@ type MyFeeTarget = {
 export function ApiMemberFeesPage() {
   const { activeOrganization } = useSession()
   const [copied, setCopied] = useState(false)
+  const [selectedTargetId, setSelectedTargetId] = useState<number | null>(null)
   const [targets, setTargets] = useState<MyFeeTarget[]>([])
   const [transactions, setTransactions] = useState<FeesTransaction[]>([])
   const [summary, setSummary] = useState({ balance: 0, expense: 0 })
-  const [requestError, setRequestError] = useState('')
+  const [targetsError, setTargetsError] = useState('')
+  const [targetsLoaded, setTargetsLoaded] = useState(false)
+  const [ledgerError, setLedgerError] = useState('')
+  const [ledgerLoaded, setLedgerLoaded] = useState(false)
 
   useEffect(() => {
     if (!activeOrganization) return
-    Promise.all([
-      feesApi.myTargets(activeOrganization.organizationId),
-      feesApi.ledger(activeOrganization.organizationId),
-    ]).then(([targetsRaw, ledgerRaw]) => {
+    const organizationId = activeOrganization.organizationId
+    let cancelled = false
+    queueMicrotask(() => {
+      if (cancelled) return
+      setTargets([])
+      setTransactions([])
+      setSelectedTargetId(null)
+      setTargetsError('')
+      setTargetsLoaded(false)
+      setLedgerError('')
+      setLedgerLoaded(false)
+    })
+    feesApi.myTargets(organizationId).then((targetsRaw) => {
+      if (cancelled) return
       const targetResult = targetsRaw as { content?: MyFeeTarget[] }
-      const ledgerResult = ledgerRaw as { content?: Array<Record<string, unknown>>; summary?: Record<string, unknown> }
       setTargets(targetResult.content ?? [])
+      setTargetsLoaded(true)
+    }).catch((error) => { if (!cancelled) setTargetsError(errorMessage(error)) })
+    feesApi.ledger(organizationId).then((ledgerRaw) => {
+      if (cancelled) return
+      const ledgerResult = ledgerRaw as { content?: Array<Record<string, unknown>>; summary?: Record<string, unknown> }
       setTransactions((ledgerResult.content ?? []).map((item) => ({
         id: String(item.transactionId ?? item.feeItemId),
         date: String(item.occurredOn ?? '').replaceAll('-', '.'),
@@ -51,11 +69,14 @@ export function ApiMemberFeesPage() {
         balance: Number(rawSummary.balance ?? rawSummary.currentBalance ?? 0),
         expense: Number(rawSummary.expense ?? rawSummary.totalExpense ?? rawSummary.semesterExpense ?? 0),
       })
-      setRequestError('')
-    }).catch((error) => setRequestError(errorMessage(error)))
+      setLedgerLoaded(true)
+    }).catch((error) => { if (!cancelled) setLedgerError(errorMessage(error)) })
+    return () => { cancelled = true }
   }, [activeOrganization])
 
-  const currentTarget = targets.find((target) => target.status === 'UNPAID') ?? targets[0]
+  const currentTarget = targets.find((target) => target.feeTargetId === selectedTargetId)
+    ?? targets.find((target) => target.status === 'UNPAID') ?? targets[0]
+  const unpaidCount = targets.filter((target) => target.status === 'UNPAID').length
   const account = currentTarget?.paymentAccount
   const handleCopyAccount = async () => {
     if (!account?.accountNumber) return
@@ -70,12 +91,23 @@ export function ApiMemberFeesPage() {
     <DashboardShell role="member">
       <section className="fees-page member-fees-page">
         <header className="fees-page-head"><div><div className="fees-eyebrow">OPEN LEDGER</div><h1>납부 항목 관리</h1><p>납부 현황과 동아리 회계 사용 내역을 확인하세요.</p></div></header>
-        {requestError && <p role="alert">{requestError}</p>}
+        {targetsError && <p role="alert">납부 항목을 불러오지 못했어요. {targetsError}</p>}
+        {ledgerError && <p role="alert">장부를 불러오지 못했어요. {ledgerError}</p>}
         <div className="member-fees-summary">
-          <article className="member-fees-summary-card is-balance"><span>현재 잔여금</span><strong>₩{summary.balance.toLocaleString('ko-KR')}</strong><small>회원 전체 공개</small></article>
-          <article className="member-fees-summary-card is-expense"><span>누적 출금</span><strong>₩{summary.expense.toLocaleString('ko-KR')}</strong><small>공개 장부 기준</small></article>
-          <article className="member-fees-summary-card is-payment"><span>내 납부 현황</span><strong>{currentTarget?.status === 'UNPAID' ? '미납' : currentTarget ? '납부 완료' : '내역 없음'}</strong><small>{currentTarget ? `${currentTarget.title} · ₩${currentTarget.amountDue.toLocaleString('ko-KR')}` : '등록된 납부 항목이 없습니다.'}</small></article>
+          <article className="member-fees-summary-card is-balance"><span>현재 잔여금</span><strong>{ledgerLoaded ? `₩${summary.balance.toLocaleString('ko-KR')}` : '—'}</strong><small>회원 전체 공개</small></article>
+          <article className="member-fees-summary-card is-expense"><span>누적 출금</span><strong>{ledgerLoaded ? `₩${summary.expense.toLocaleString('ko-KR')}` : '—'}</strong><small>공개 장부 기준</small></article>
+          <article className="member-fees-summary-card is-payment"><span>내 납부 현황</span><strong>{targetsLoaded ? targets.length ? unpaidCount ? `${unpaidCount}건 미납` : '모두 납부 완료' : '내역 없음' : '—'}</strong><small>{targetsLoaded ? targets.length ? `전체 ${targets.length}개 납부 항목` : '등록된 납부 항목이 없습니다.' : targetsError ? '납부 항목을 확인할 수 없어요.' : '납부 항목을 불러오는 중이에요.'}</small></article>
         </div>
+        {targets.length > 1 && <section className="member-fee-selector" aria-label="납부 항목 선택">
+          <h2>내 납부 항목</h2>
+          <div className="member-fee-selector-list">{targets.map((target) => <button
+            key={target.feeTargetId}
+            type="button"
+            aria-pressed={currentTarget?.feeTargetId === target.feeTargetId}
+            className={currentTarget?.feeTargetId === target.feeTargetId ? 'is-selected' : ''}
+            onClick={() => { setSelectedTargetId(target.feeTargetId); setCopied(false) }}
+          ><span>{target.title}</span><strong>₩{target.amountDue.toLocaleString('ko-KR')}</strong><small>{target.status === 'PAID' ? '납부 완료' : '미납'}</small></button>)}</div>
+        </section>}
         {currentTarget && (
           <section className="member-fee-payment-card">
             <div className="member-fee-payment-head"><div><h2>{currentTarget.title}</h2><p>{currentTarget.categoryName} · {currentTarget.status === 'PAID' ? '납부 완료' : '미납'}</p></div><span className={currentTarget.status === 'PAID' ? 'fees-status' : 'member-fee-unpaid'}>{currentTarget.status === 'PAID' ? '납부 완료' : '미납'}</span></div>

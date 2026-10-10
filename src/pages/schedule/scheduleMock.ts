@@ -16,6 +16,10 @@ export type CalendarItem = {
   capacity?: number
   registered?: number
   deadline?: string
+  participating?: boolean
+  canApply?: boolean
+  canCancel?: boolean
+  registrationStatus?: string
 }
 
 export const calendarMockData: CalendarItem[] = [

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { DashboardShell } from '../dashboard/DashboardShell'
 import addIcon from '../../assets/dashboard-add.svg'
 import { CalendarGrid } from './CalendarGrid'
@@ -14,8 +15,10 @@ import './schedule.css'
 import { scheduleApi } from '../../api/services'
 import { errorMessage } from '../../api/client'
 import { useSession } from '../../context/SessionContext'
+import { PATHS } from '../../routes/paths'
 
 export function SchedulePage() {
+  const navigate = useNavigate()
   const { activeOrganization } = useSession()
   const [searchParams, setSearchParams] = useSearchParams()
 const isMember = activeOrganization?.myRole === 'MEMBER'
@@ -64,7 +67,8 @@ const [deletingItem, setDeletingItem] =
   useEffect(() => { queueMicrotask(() => void loadCalendar()); window.addEventListener('dongbang:schedule-changed', loadCalendar); return () => window.removeEventListener('dongbang:schedule-changed', loadCalendar) }, [loadCalendar])
 
   const openItem = async (item: CalendarItem) => {
-    if (!activeOrganization || item.type === 'fee') { setSelectedItem(item); return }
+    if (item.type === 'fee') { navigate(PATHS.fees); return }
+    if (!activeOrganization) return
     try {
       const detail = await scheduleApi.detail(activeOrganization.organizationId, item.id)
       setSelectedItem({
@@ -73,7 +77,11 @@ const [deletingItem, setDeletingItem] =
         description: String(detail.description ?? ''),
         capacity: detail.capacity == null ? undefined : Number(detail.capacity),
         registered: detail.participantCount == null ? undefined : Number(detail.participantCount),
-        deadline: detail.registrationDeadline ? String(detail.registrationDeadline).slice(0, 16) : undefined,
+        deadline: detail.registrationDeadline ? calendarLocalDateTime(String(detail.registrationDeadline)) : undefined,
+        participating: detail.participating === true,
+        canApply: detail.canApply === true,
+        canCancel: detail.canCancel === true,
+        registrationStatus: String(detail.registrationStatus ?? ''),
       })
     } catch (requestError) { setLoadError(errorMessage(requestError)) }
   }
@@ -172,6 +180,7 @@ const handleParticipantEditRequest = (
   onParticipantEditRequest={
     handleParticipantEditRequest
   }
+  onAttendanceRequest={(item) => navigate(`${PATHS.attendance}?eventId=${encodeURIComponent(item.id)}`)}
 />
       <ScheduleFormModal
         key={isCreateModalOpen ? `create-${createType}` : 'create-closed'}

@@ -5,7 +5,9 @@ import { MyPageModals } from './MyPageModals'
 import { HelpGuideModal } from './HelpGuideModal'
 import { NotificationModal, type NotificationItem } from './NotificationModal'
 import { notificationApi } from '../../api/services'
+import { errorMessage } from '../../api/client'
 import { useSession } from '../../context/SessionContext'
+import { OrganizationAvatar } from '../common/OrganizationAvatar'
 
 type NavItem = { label: string; icon: string }
 
@@ -41,6 +43,8 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
   const [helpGuideOpen, setHelpGuideOpen] = useState(false)
   const [notificationOpen, setNotificationOpen] = useState(false)
   const [notificationState, setNotificationState] = useState<{ organizationId: number | null; items: NotificationItem[] }>({ organizationId: null, items: [] })
+  const [notificationError, setNotificationError] = useState('')
+  const [notificationReload, setNotificationReload] = useState(0)
   const notifications = notificationState.organizationId === activeOrganization?.organizationId ? notificationState.items : []
   const [savedDisplayName, setSavedDisplayName] = useState<string | null>(null)
   const displayName = savedDisplayName ?? userName
@@ -49,8 +53,10 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
   useEffect(() => {
     if (!activeOrganization) return
     let cancelled = false
+    queueMicrotask(() => { if (!cancelled) setNotificationError('') })
     notificationApi.list(activeOrganization.organizationId).then((response) => {
       if (cancelled) return
+      setNotificationError('')
       const pathByType: Record<string, string> = { EVENT: '/calendar', FEE_ITEM: '/fees', ATTENDANCE_SESSION: '/attendance' }
       setNotificationState({ organizationId: activeOrganization.organizationId, items: (response.content ?? []).map((item) => ({
         id: String(item.notificationId),
@@ -59,9 +65,9 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
         path: pathByType[item.referenceType] ?? '/dashboard',
         unread: !item.isRead,
       })) })
-    }).catch(() => { if (!cancelled) setNotificationState({ organizationId: activeOrganization.organizationId, items: [] }) })
+    }).catch((error) => { if (!cancelled) setNotificationError(errorMessage(error)) })
     return () => { cancelled = true }
-  }, [activeOrganization])
+  }, [activeOrganization, notificationReload])
   const closeMobileMenu = (restoreFocus = false) => {
     setMenuOpen(false)
     if (restoreFocus) {
@@ -145,7 +151,7 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
           <strong>Dong<span>Bang</span></strong>
         </button>
         <div className="topbar-actions">
-          <button type="button" className="organization-switcher" onClick={handleOrganizationClick}><b>D</b><span>{organizationName}</span><i aria-hidden="true">⌄</i></button>
+          <button type="button" className="organization-switcher" onClick={handleOrganizationClick}><OrganizationAvatar organization={activeOrganization} /><span>{organizationName}</span><i aria-hidden="true">⌄</i></button>
           <button type="button" className="icon-button notification-button" aria-label={`읽지 않은 알림 ${unreadCount}개`} onClick={() => setNotificationOpen(true)}><BellIcon />{unreadCount > 0 && <i>{unreadCount}</i>}</button>
           <button type="button" className="avatar" aria-label="내 정보" onClick={() => setMyPageMode('profile')}>{displayName.slice(0, 1)}</button>
           <button ref={mobileMenuButtonRef} type="button" className="mobile-menu" aria-label={menuOpen ? '메뉴 닫기' : '메뉴 열기'} aria-expanded={menuOpen} aria-controls="primary-navigation" onClick={() => setMenuOpen((open) => !open)}><MenuIcon /></button>
@@ -156,7 +162,7 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
 
       <aside ref={sidebarRef} id="primary-navigation" className={`sidebar ${menuOpen ? 'is-open' : ''}`} aria-label="주 메뉴">
         <button type="button" className="sidebar-organization" onClick={handleOrganizationClick}>
-          <b>D</b>
+          <OrganizationAvatar organization={activeOrganization} />
           <span><strong>{organizationName}</strong><small>동아리 전환</small></span>
           <i aria-hidden="true">›</i>
         </button>
@@ -196,10 +202,13 @@ export function AppLayout({ children, navItems, activeNav, onNavChange, onOrgani
       <NotificationModal
         open={notificationOpen}
         notifications={notifications}
+        error={notificationError}
+        onRetry={() => setNotificationReload((count) => count + 1)}
         onClose={() => setNotificationOpen(false)}
         onMarkAllRead={() => {
           if (activeOrganization) void notificationApi.readAll(activeOrganization.organizationId)
-          setNotificationState((current) => ({ ...current, items: current.items.map((item) => ({ ...item, unread: false })) }))
+            .then(() => setNotificationState((current) => ({ ...current, items: current.items.map((item) => ({ ...item, unread: false })) })))
+            .catch((error) => setNotificationError(errorMessage(error)))
         }}
         onNotificationClick={(id, path) => {
           void notificationApi.read(Number(id)).catch(() => {})

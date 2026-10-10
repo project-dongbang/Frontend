@@ -64,21 +64,33 @@ test('the join route waits for authentication before offering invitation accepta
 
 test('an invitation remains available after the OAuth redirect', () => {
   const values = new Map()
+  const persistentValues = new Map()
   window.sessionStorage = {
     getItem: (key) => values.get(key) ?? null,
     setItem: (key, value) => values.set(key, value),
     removeItem: (key) => values.delete(key),
   }
+  window.localStorage = {
+    getItem: (key) => persistentValues.get(key) ?? null,
+    setItem: (key, value) => persistentValues.set(key, value),
+    removeItem: (key) => persistentValues.delete(key),
+  }
   authReturn.saveAuthReturnPath('/clubs/join?invite=code%2Fwith%20space')
   assert.equal(authReturn.getAuthReturnPath(), '/clubs/join?invite=code%2Fwith%20space')
+  values.clear() // A provider may return in another tab without its sessionStorage.
+  assert.equal(authReturn.getPostAuthDestination(), '/clubs/join?invite=code%2Fwith+space&autoJoin=1')
+  persistentValues.set('dongbang.authReturnPathExpiresAt', String(Date.now() - 1))
+  assert.equal(authReturn.getPostAuthDestination(), '/clubs')
   authReturn.clearAuthReturnPath()
   assert.equal(authReturn.getAuthReturnPath(), '/clubs')
+  assert.equal(persistentValues.size, 0)
 })
 
 test('a QR check-in destination survives login with its token intact', () => {
   const path = checkInLink.checkInPath(4, 9, 'token/+ space')
   authReturn.saveAuthReturnPath(path)
   assert.equal(authReturn.getAuthReturnPath(), path)
+  assert.equal(authReturn.getPostAuthDestination(), path)
   assert.deepEqual(checkInLink.parseCheckInParams(new URLSearchParams(path.split('?')[1])), {
     organizationId: 4, eventId: 9, qrToken: 'token/+ space',
   })
