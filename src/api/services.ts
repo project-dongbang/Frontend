@@ -31,6 +31,7 @@ export const organizationApi = {
 
 export const profileApi = {
   get: () => apiRequest<Profile>('/api/v1/users/me'),
+  withdraw: () => apiRequest<void>('/api/v1/users/me', { method: 'DELETE' }),
   update: (body: Partial<Pick<Profile, 'name' | 'studentNumber' | 'department' | 'email'>>) => apiRequest<Profile>('/api/v1/users/me', { method: 'PATCH', body }),
   activities: (organizationId: number) => apiRequest<Record<string, unknown>>(`/api/v1/users/me/activities?organizationId=${organizationId}`),
   uploadImage: (image: File) => { const body = new FormData(); body.append('image', image); return apiRequest('/api/v1/users/me/profile-image', { method: 'POST', body }) },
@@ -48,8 +49,8 @@ export const scheduleApi = {
   create: (organizationId: number, body: Record<string, unknown>) => apiRequest(`/api/v1/organizations/${organizationId}/events`, { method: 'POST', body }),
   update: (organizationId: number, eventId: string | number, body: Record<string, unknown>) => apiRequest(`/api/v1/organizations/${organizationId}/events/${eventId}`, { method: 'PATCH', body }),
   remove: (organizationId: number, eventId: string | number) => apiRequest(`/api/v1/organizations/${organizationId}/events/${eventId}`, { method: 'DELETE' }),
-  apply: (organizationId: number, eventId: string | number) => apiRequest(`/api/v1/organizations/${organizationId}/events/${eventId}/applications`, { method: 'POST' }),
-  withdraw: (organizationId: number, eventId: string | number) => apiRequest(`/api/v1/organizations/${organizationId}/events/${eventId}/applications`, { method: 'DELETE' }),
+  apply: (organizationId: number, eventId: string | number) => apiRequest<{ participating: boolean; participantCount: number }>(`/api/v1/organizations/${organizationId}/events/${eventId}/applications`, { method: 'POST' }),
+  withdraw: (organizationId: number, eventId: string | number) => apiRequest<{ participating: boolean; participantCount: number }>(`/api/v1/organizations/${organizationId}/events/${eventId}/applications`, { method: 'DELETE' }),
   closeApplications: (organizationId: number, eventId: string | number) => apiRequest(`/api/v1/organizations/${organizationId}/events/${eventId}/applications/close`, { method: 'POST' }),
   participantCandidates: (organizationId: number, eventId: string | number, keyword = '') => apiRequest<Record<string, unknown>>(`/api/v1/organizations/${organizationId}/events/${eventId}/participant-candidates?size=100${keyword ? `&keyword=${encodeURIComponent(keyword)}` : ''}`),
   changeParticipants: (organizationId: number, eventId: string | number, participantVersion: number, changes: Array<{ membershipId: number; action: 'ADD' | 'REMOVE' }>) => apiRequest(`/api/v1/organizations/${organizationId}/events/${eventId}/participants`, { method: 'PATCH', body: { participantVersion, changes } }),

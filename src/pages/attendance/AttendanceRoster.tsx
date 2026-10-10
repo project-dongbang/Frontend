@@ -130,14 +130,12 @@ export function AttendanceRoster({
             ))
           ) : (
             <div className="attendance-empty">
-              조건에 맞는 참가자가 없습니다.
+              {eventTitle ? totalCount ? '조건에 맞는 참가자가 없습니다.' : '아직 참가 신청자가 없습니다.' : '행사를 선택해 주세요.'}
             </div>
           )}
         </div>
 
-        <p className="attendance-scroll-guide">
-          아래로 스크롤해 참가자 전체 명단을 확인하세요.
-        </p>
+        {members.length > 0 && <p className="attendance-scroll-guide">아래로 스크롤해 참가자 명단을 확인하세요.</p>}
 
         <div className="attendance-summary">
           <div>

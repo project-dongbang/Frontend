@@ -3432,6 +3432,16 @@
   background: var(--color-bg-surface);
 }
 
+.member-fee-selector { margin-bottom: 18px; }
+.member-fee-selector h2 { margin: 0 0 10px; font-size: 16px; }
+.member-fee-selector-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+.member-fee-selector-list button { display: grid; gap: 6px; min-width: 0; padding: 14px 16px; border: 1px solid var(--color-border-default); border-radius: 11px; color: var(--color-text-primary); background: #fff; font: inherit; text-align: left; cursor: pointer; }
+.member-fee-selector-list button:hover, .member-fee-selector-list button.is-selected { border-color: #214a6b; background: #f8fbfd; }
+.member-fee-selector-list button:focus-visible { outline: 2px solid #214a6b; outline-offset: 2px; }
+.member-fee-selector-list span { overflow: hidden; font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.member-fee-selector-list strong { font-size: 14px; }
+.member-fee-selector-list small { color: var(--color-text-secondary); font-size: 11px; }
+
 .member-fee-payment-head {
   display: flex;
   align-items: flex-start;

@@ -94,11 +94,7 @@ export function CalendarGrid({
                         ? 'fee'
                         : ''
                   }`}
-                  onClick={() => {
-                    if (item.type !== 'fee') {
-                      onItemClick(item)
-                    }
-                  }}
+                  onClick={() => onItemClick(item)}
                 >
                   {item.type === 'fee'
                     ? item.title

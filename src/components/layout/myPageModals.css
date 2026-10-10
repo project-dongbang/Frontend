@@ -12,7 +12,14 @@
 .profile-image-actions button:hover, .logout-button:hover { text-decoration: underline; }
 .profile-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 16px; }
 .my-page-modal-actions { display: flex; align-items: center; gap: 8px; }
-.my-page-modal-actions .logout-button { margin-left: auto; color: #8a969f; font-size: 13px; }
+.my-page-account-actions { display: flex; gap: 12px; align-items: center; margin-left: auto; }
+.my-page-modal-actions .logout-button { color: #8a969f; font-size: 13px; }
+.withdraw-link { border: 0; padding: 0; color: #a14543; background: transparent; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.withdraw-link:hover { text-decoration: underline; }
+.withdraw-modal .modal-body { gap: 12px; }
+.withdraw-modal .modal-body p { margin: 0; color: #596875; line-height: 1.6; }
+.withdraw-modal .modal-body .withdraw-error { color: #a14543; font-weight: 700; }
+.withdraw-modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .activity-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .activity-summary > div { display: grid; gap: 8px; padding: 17px 18px; border: 1px solid #e3e8ec; border-radius: 13px; background: #f9fbfc; }
 .activity-summary span { color: #71808c; font-size: 12px; font-weight: 700; }
@@ -23,5 +30,5 @@
 .activity-list article > div { display: grid; gap: 4px; }
 .activity-list article strong { color: #273440; font-size: 14px; }
 .activity-list article span { color: #77838d; font-size: 12px; }
-@media (max-width: 520px) { .profile-form-grid, .activity-summary { grid-template-columns: 1fr; }.my-page-modal-actions { flex-wrap: wrap; }.my-page-modal-actions .logout-button { width: 100%; margin: 3px 0 0; text-align: right; } }
+@media (max-width: 520px) { .profile-form-grid, .activity-summary { grid-template-columns: 1fr; }.my-page-modal-actions { flex-wrap: wrap; }.my-page-account-actions { width: 100%; justify-content: flex-end; }.withdraw-modal-actions { flex-wrap: wrap; } }
 @media (max-width: 760px) { .modal-backdrop:has(.my-page-modal) { position: fixed; } }

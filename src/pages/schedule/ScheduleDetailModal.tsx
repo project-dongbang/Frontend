@@ -16,6 +16,7 @@ type ScheduleDetailModalProps = {
   onParticipantEditRequest: (
     item: CalendarItem,
   ) => void
+  onAttendanceRequest: (item: CalendarItem) => void
 }
 
 function formatDateTime(value: string) {
@@ -31,8 +32,11 @@ export function ScheduleDetailModal({
   onDeleteRequest,
   onEarlyCloseRequest,
   onParticipantEditRequest,
+  onAttendanceRequest,
 }: ScheduleDetailModalProps) {
-  const [joined, setJoined] = useState(false)
+  const [joined, setJoined] = useState(Boolean(item?.participating))
+  const [participantCount, setParticipantCount] = useState(item?.registered ?? 0)
+  const [changingApplication, setChangingApplication] = useState(false)
   const [requestError, setRequestError] = useState('')
   const { activeOrganization } = useSession()
 
@@ -41,12 +45,17 @@ export function ScheduleDetailModal({
   const isEvent = item.type === 'event'
 
   const deadline = item.deadline || item.start
-  const isClosed =
-    new Date(deadline) <= new Date()
+  const isClosed = item.registrationStatus
+    ? item.registrationStatus === 'CLOSED'
+    : new Date(deadline) <= new Date()
 
   const isFull =
     item.capacity !== undefined &&
-    (item.registered ?? 0) >= item.capacity
+    participantCount >= item.capacity
+  const canApply = item.participating === joined && item.canApply !== undefined
+    ? item.canApply : !isClosed && !isFull
+  const canCancel = item.participating === joined && item.canCancel !== undefined
+    ? item.canCancel : !isClosed
 
   return (
     <div
@@ -107,7 +116,7 @@ export function ScheduleDetailModal({
                 <>
                   <span>신청</span>
                   <strong>
-                    {item.registered ?? 0}명 /{' '}
+                    {participantCount}명 /{' '}
                     {item.capacity
                       ? `${item.capacity}명`
                       : '정원 제한 없음'}
@@ -194,7 +203,7 @@ export function ScheduleDetailModal({
         variant="secondary"
         onClick={() => {
           if (isEvent) {
-            onParticipantEditRequest(item)
+            onAttendanceRequest(item)
             return
           }
 
@@ -220,26 +229,28 @@ export function ScheduleDetailModal({
     {isMember && isEvent && (
       <Button
         type="button"
-        disabled={
-          !joined && (isClosed || isFull)
-        }
+        disabled={changingApplication || (joined ? !canCancel : !canApply)}
         onClick={async () => {
-          if (!joined && (isClosed || isFull)) {
-            return
-          }
           if (!activeOrganization) return
+          setChangingApplication(true)
           try {
-            if (joined) await scheduleApi.withdraw(activeOrganization.organizationId, item.id)
-            else await scheduleApi.apply(activeOrganization.organizationId, item.id)
-            setJoined((prev) => !prev)
+            const result = joined
+              ? await scheduleApi.withdraw(activeOrganization.organizationId, item.id)
+              : await scheduleApi.apply(activeOrganization.organizationId, item.id)
+            setJoined(result.participating)
+            setParticipantCount(result.participantCount)
             setRequestError('')
           } catch (error) {
             setRequestError(errorMessage(error))
+          } finally {
+            setChangingApplication(false)
           }
         }}
       >
-        {joined
-          ? '참가 신청 취소'
+        {changingApplication
+          ? '처리 중…'
+          : joined
+          ? canCancel ? '참가 신청 취소' : '신청 완료'
           : isClosed
             ? '신청 마감'
             : isFull

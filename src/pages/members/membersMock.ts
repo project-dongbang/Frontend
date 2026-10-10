@@ -24,5 +24,4 @@ export const membersMock: Member[] = names.map((name, index) => ({
   generation: `${11 + index % 3}기`,
   role: index < 3 ? '운영진' : index === 3 ? '회장' : index === 4 ? '총무' : '일반 회원',
   status: '활동',
-  payment: index < 58 ? '납부 완료' : '미납',
 }))

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { MemberAttendancePage } from './MemberAttendancePage'
 import { DashboardShell } from '../dashboard/DashboardShell'
 import { AttendanceQrPanel } from './AttendanceQrPanel'
@@ -12,10 +13,11 @@ import { useSession } from '../../context/SessionContext'
 export type AttendanceFilter = AttendanceStatus | 'all'
 
 export function AttendancePage() {
+  const [searchParams] = useSearchParams()
   const { activeOrganization } = useSession()
-  const [selectedEventId, setSelectedEventId] = useState('')
+  const [selectedEventId, setSelectedEventId] = useState(() => searchParams.get('eventId') ?? '')
   const [filter, setFilter] =
-    useState<AttendanceFilter>('present')
+    useState<AttendanceFilter>('all')
   const [search, setSearch] = useState('')
   const [refreshText, setRefreshText] =
     useState('행사 출석 체크인')

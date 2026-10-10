@@ -2,9 +2,12 @@ import dongbangLogo from '../../../assets/dongbang-logo.svg'
 import googleIcon from '../../../assets/google.svg'
 import kakaoIcon from '../../../assets/kakao.svg'
 import { authApi } from '../../../api/services'
+import { useSearchParams } from 'react-router-dom'
 import './LoginPage.css'
 
 export function LoginPage() {
+  const [searchParams] = useSearchParams()
+  const loginError = searchParams.get('error')
   const login = (provider: 'google' | 'kakao') => {
     const redirectUri = `${window.location.origin}/auth/callback`
     window.location.assign(authApi.authorizeUrl(provider, redirectUri))
@@ -21,6 +24,7 @@ export function LoginPage() {
           <button className="social-button google-button" type="button" onClick={() => login('google')}><img src={googleIcon} alt="" />Google로 계속하기</button>
           <button className="social-button kakao-button" type="button" onClick={() => login('kakao')}><img src={kakaoIcon} alt="" />카카오로 계속하기</button>
         </div>
+        {(loginError === 'cancelled' || loginError === 'failed') && <p className="login-error" role="alert">{loginError === 'cancelled' ? '로그인이 취소됐어요. 원할 때 다시 시도해 주세요.' : '로그인을 완료하지 못했어요. 잠시 후 다시 시도해 주세요.'}</p>}
         <p className="login-helper">별도의 비밀번호 없이 안전하고 간편하게 로그인합니다.</p>
       </section>
       <footer>© 2026 DongBang</footer>

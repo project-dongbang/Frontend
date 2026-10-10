@@ -35,3 +35,8 @@ test('the login route offers both OAuth providers', () => {
   assert.equal((html.match(/Google로 계속하기/g) ?? []).length, 1)
   assert.equal((html.match(/카카오로 계속하기/g) ?? []).length, 1)
 })
+
+test('a cancelled OAuth attempt returns to login with a clear retry message', () => {
+  assert.match(renderPath('/login?error=cancelled'), /로그인이 취소됐어요/)
+  assert.match(renderPath('/login?error=failed'), /로그인을 완료하지 못했어요/)
+})

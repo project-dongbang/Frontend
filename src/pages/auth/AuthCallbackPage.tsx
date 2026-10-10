@@ -2,21 +2,20 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSession } from '../../context/SessionContext'
 import { PATHS } from '../../routes/paths'
-import { authApi } from '../../api/services'
-import { getAuthReturnPath } from '../../routes/authReturn'
+import { getPostAuthDestination } from '../../routes/authReturn'
 
 export function AuthCallbackPage() {
   const navigate = useNavigate()
   const { refresh } = useSession()
 
   useEffect(() => {
-    void refresh().then(async () => {
-      try {
-        const user = await authApi.me()
-        navigate(user.onboardingRequired ? PATHS.signup : getAuthReturnPath(), { replace: true })
-      } catch {
-        navigate(PATHS.login, { replace: true })
-      }
+    const loginError = new URLSearchParams(window.location.search).get('loginError')
+    if (loginError) {
+      navigate(`${PATHS.login}?error=${loginError === 'cancelled' ? 'cancelled' : 'failed'}`, { replace: true })
+      return
+    }
+    void refresh().then((user) => {
+      navigate(user ? user.onboardingRequired ? PATHS.signup : getPostAuthDestination() : PATHS.login, { replace: true })
     })
   }, [navigate, refresh])
 

@@ -66,13 +66,17 @@ export function FeesPage() {
     setLedgerSummary({ balance: 0, expense: 0, expenseCount: 0 })
     setPaymentSummary({ feeItemId: 0, targetCount: 0, paidCount: 0, unpaidCount: 0, paymentRate: 0 })
     try {
-      const [ledgerRaw, itemsRaw, memberRaw] = await Promise.all([
+      const [ledgerResult, itemsResult, memberResult] = await Promise.allSettled([
         feesApi.ledger(activeOrganization.organizationId),
         feesApi.feeItems(activeOrganization.organizationId),
         organizationApi.members(activeOrganization.organizationId),
       ])
-      const ledger = ledgerRaw as { content?: Array<Record<string, unknown>>; summary?: Record<string, unknown> }
-      const items = itemsRaw as { content?: Array<Record<string, unknown>> }
+      const errors: string[] = []
+      if (ledgerResult.status === 'rejected') errors.push(`장부: ${errorMessage(ledgerResult.reason)}`)
+      if (itemsResult.status === 'rejected') errors.push(`납부 항목: ${errorMessage(itemsResult.reason)}`)
+      if (memberResult.status === 'rejected') errors.push(`멤버 목록: ${errorMessage(memberResult.reason)}`)
+      const ledger = (ledgerResult.status === 'fulfilled' ? ledgerResult.value : {}) as { content?: Array<Record<string, unknown>>; summary?: Record<string, unknown> }
+      const items = (itemsResult.status === 'fulfilled' ? itemsResult.value : {}) as { content?: Array<Record<string, unknown>> }
       const mappedTransactions: FeesTransaction[] = (ledger.content ?? []).map((item) => ({
         id: String(item.transactionId ?? item.feeItemId),
         date: String(item.occurredOn ?? '').replaceAll('-', '.'),
@@ -94,18 +98,20 @@ export function FeesPage() {
         id: String(item.feeItemId), title: String(item.title ?? ''), dueDate: String(item.dueDate ?? '').replaceAll('-', '.'), description: '', bank: '', accountNumber: '', accountHolder: '', categories: [],
       }))
       setCollections(mappedCollections)
-      setAvailableMembers(memberRaw.members.filter((member) => member.status === 'ACTIVE').map((member) => ({ id: String(member.membershipId), membershipId: String(member.membershipId), name: member.memberName, studentId: member.studentNumber, generation: member.generation || '-', amount: 0, status: 'unpaid' })))
+      if (memberResult.status === 'fulfilled') setAvailableMembers(memberResult.value.members.filter((member) => member.status === 'ACTIVE').map((member) => ({ id: String(member.membershipId), membershipId: String(member.membershipId), name: member.memberName, studentId: member.studentNumber, generation: member.generation || '-', amount: 0, status: 'unpaid' })))
       if (mappedCollections[0]) {
-        const targetsRaw = await feesApi.feeTargets(activeOrganization.organizationId, mappedCollections[0].id) as { content?: Array<Record<string, unknown>>; summary?: { targetCount?: number; paidCount?: number; unpaidCount?: number; paymentRate?: number } }
-        const targets = (targetsRaw.content ?? []).map((target): FeePaymentMember => ({
-          id: String(target.feeTargetId), membershipId: String(target.membershipId), name: String(target.name), studentId: String(target.studentNumber), generation: String(target.generation ?? '-'), amount: Number(target.amountDue ?? 0), status: target.status === 'PAID' ? 'paid' : 'unpaid',
-        }))
-        setPaymentMembers(targets)
-        const targetCount = Number(targetsRaw.summary?.targetCount ?? targets.length)
-        const paidCount = Number(targetsRaw.summary?.paidCount ?? targets.filter((target) => target.status === 'paid').length)
-        setPaymentSummary({ feeItemId: Number(mappedCollections[0].id), targetCount, paidCount, unpaidCount: Number(targetsRaw.summary?.unpaidCount ?? targetCount - paidCount), paymentRate: Number(targetsRaw.summary?.paymentRate ?? (targetCount ? paidCount / targetCount * 100 : 0)) })
+        try {
+          const targetsRaw = await feesApi.feeTargets(activeOrganization.organizationId, mappedCollections[0].id) as { content?: Array<Record<string, unknown>>; summary?: { targetCount?: number; paidCount?: number; unpaidCount?: number; paymentRate?: number } }
+          const targets = (targetsRaw.content ?? []).map((target): FeePaymentMember => ({
+            id: String(target.feeTargetId), membershipId: String(target.membershipId), name: String(target.name), studentId: String(target.studentNumber), generation: String(target.generation ?? '-'), amount: Number(target.amountDue ?? 0), status: target.status === 'PAID' ? 'paid' : 'unpaid',
+          }))
+          setPaymentMembers(targets)
+          const targetCount = Number(targetsRaw.summary?.targetCount ?? targets.length)
+          const paidCount = Number(targetsRaw.summary?.paidCount ?? targets.filter((target) => target.status === 'paid').length)
+          setPaymentSummary({ feeItemId: Number(mappedCollections[0].id), targetCount, paidCount, unpaidCount: Number(targetsRaw.summary?.unpaidCount ?? targetCount - paidCount), paymentRate: Number(targetsRaw.summary?.paymentRate ?? (targetCount ? paidCount / targetCount * 100 : 0)) })
+        } catch (error) { errors.push(`납부 현황: ${errorMessage(error)}`) }
       } else setPaymentMembers([])
-      setRequestError('')
+      setRequestError(errors.join(' / '))
     } catch (error) { setRequestError(errorMessage(error)) }
   }, [activeOrganization])
 
