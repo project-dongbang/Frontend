@@ -1,5 +1,6 @@
 export function resolveApiBaseUrl(configured: string | undefined, production: boolean) {
-  return (configured ?? (production ? '' : 'http://localhost:8080')).replace(/\/$/, '')
+  if (production) return ''
+  return (configured ?? 'http://localhost:8080').replace(/\/$/, '')
 }
 
 export const API_BASE_URL = resolveApiBaseUrl(import.meta.env.VITE_API_BASE_URL, import.meta.env.PROD)
