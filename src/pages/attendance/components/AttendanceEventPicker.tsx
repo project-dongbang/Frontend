@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { AttendanceEvent } from '../attendanceMock'
+import { FeedbackState } from '../../../components/common/FeedbackState'
 
 type AttendanceEventPickerProps = {
   open: boolean
@@ -203,13 +204,23 @@ export function AttendanceEventPicker({
                 </button>
               ))
             ) : (
-              <p className="attendance-picker-empty">
-                해당 조건의 행사가 없습니다.
-              </p>
+              <FeedbackState
+                title={events.length ? '검색 결과가 없어요' : '아직 출석할 행사가 없어요'}
+                description={events.length
+                  ? '검색어나 날짜를 바꿔 보세요. 조건을 초기화하면 모든 행사를 볼 수 있어요.'
+                  : '행사가 등록되면 여기에서 선택할 수 있어요.'}
+                action={events.length ? <button type="button" className="feedback-reset-button" onClick={() => {
+                  setQuery('')
+                  setStartDate('')
+                  setEndDate('')
+                  setLatestOnly(false)
+                  resetPage()
+                }}>조건 초기화</button> : undefined}
+              />
             )}
           </div>
 
-          <div className="attendance-picker-pagination">
+          {filteredEvents.length > 0 && <div className="attendance-picker-pagination">
             <button
               type="button"
               disabled={currentPage === 0}
@@ -237,7 +248,7 @@ export function AttendanceEventPicker({
             >
               다음
             </button>
-          </div>
+          </div>}
         </div>
       </section>
     </div>

@@ -82,6 +82,7 @@ export function FeeItemModal({
     categoryId: string,
     patch: Partial<FeeCategory>,
   ) => {
+    setError('')
     setCategories((current) =>
       current.map((category) =>
         category.id === categoryId
@@ -95,6 +96,7 @@ export function FeeItemModal({
     categoryId: string,
     memberIds: string[],
   ) => {
+    setError('')
     const selectedIds = new Set(memberIds)
 
     setCategories((current) =>
@@ -119,10 +121,12 @@ export function FeeItemModal({
   ) => {
     event.preventDefault()
 
-    if (!title.trim() || !dueDate) {
-      setError(
-        '납부 항목명과 납부 마감일을 입력해 주세요.',
-      )
+    if (!title.trim()) {
+      setError('납부 항목명을 입력해 주세요.')
+      return
+    }
+    if (!dueDate) {
+      setError('납부 마감일을 입력해 주세요.')
       return
     }
 
@@ -134,17 +138,28 @@ export function FeeItemModal({
       setError('납부 계좌 정보를 모두 입력해 주세요.')
       return
     }
-
-    if (
-      categories.some(
-        (category) =>
-          !category.name.trim() || category.amount <= 0 || category.memberIds.length === 0,
-      )
-    ) {
-      setError(
-        '각 카테고리에 이름, 0원보다 큰 납부 금액, 대상 회원을 지정해 주세요.',
-      )
+    if (!/^[0-9-]+$/.test(accountNumber.trim())) {
+      setError('계좌번호는 숫자와 하이픈(-)만 입력해 주세요.')
       return
+    }
+
+    for (const [index, category] of categories.entries()) {
+      if (!category.name.trim()) {
+        setError(`${index + 1}번째 카테고리 이름을 입력해 주세요.`)
+        return
+      }
+      if (category.amount <= 0) {
+        setError(`${category.name} 카테고리의 납부 금액을 입력해 주세요.`)
+        return
+      }
+      if (!Number.isInteger(category.amount) || category.amount > 10000000) {
+        setError(`${category.name} 카테고리의 납부 금액은 1원부터 1,000만 원까지 입력해 주세요.`)
+        return
+      }
+      if (category.memberIds.length === 0) {
+        setError(`${category.name} 카테고리의 대상 회원을 선택해 주세요.`)
+        return
+      }
     }
 
     setSubmitting(true)
@@ -178,6 +193,7 @@ export function FeeItemModal({
       >
         <form
           className="fee-create-modal"
+          noValidate
           role="dialog"
           aria-modal="true"
           aria-labelledby="fee-item-modal-title"
@@ -221,9 +237,10 @@ export function FeeItemModal({
                   납부 항목명
                   <input
                     value={title}
-                    onChange={(event) =>
+                    onChange={(event) => {
                       setTitle(event.target.value)
-                    }
+                      setError('')
+                    }}
                     required
                     maxLength={80}
                     placeholder="예: 2026년 2학기 정기 납부"
@@ -235,9 +252,10 @@ export function FeeItemModal({
                   <input
                     type="date"
                     value={dueDate}
-                    onChange={(event) =>
+                    onChange={(event) => {
                       setDueDate(event.target.value)
-                    }
+                      setError('')
+                    }}
                     required
                   />
                 </label>
@@ -260,9 +278,10 @@ export function FeeItemModal({
                     은행명
                     <input
                       value={bank}
-                      onChange={(event) =>
+                      onChange={(event) => {
                         setBank(event.target.value)
-                      }
+                        setError('')
+                      }}
                       required
                       placeholder="예: 카카오뱅크"
                     />
@@ -271,9 +290,10 @@ export function FeeItemModal({
                     계좌번호
                     <input
                       value={accountNumber}
-                      onChange={(event) =>
+                      onChange={(event) => {
                         setAccountNumber(event.target.value)
-                      }
+                        setError('')
+                      }}
                       required
                       inputMode="numeric"
                       placeholder="계좌번호 입력"
@@ -283,9 +303,10 @@ export function FeeItemModal({
                     예금주
                     <input
                       value={accountHolder}
-                      onChange={(event) =>
+                      onChange={(event) => {
                         setAccountHolder(event.target.value)
-                      }
+                        setError('')
+                      }}
                       required
                       placeholder="예금주 입력"
                     />
@@ -330,16 +351,21 @@ export function FeeItemModal({
                                 ]
                               }`}
                             />
-                            <input
-                              className="fee-category-name"
-                              value={category.name}
-                              onChange={(event) =>
-                                updateCategory(category.id, {
-                                  name: event.target.value,
-                                })
-                              }
-                              aria-label="납부 카테고리 이름"
-                            />
+                            <label className={`fee-category-name-field${category.name.trim() ? '' : ' is-empty'}`}>
+                              <span>카테고리 이름 <em>필수</em></span>
+                              <input
+                                className="fee-category-name"
+                                value={category.name}
+                                placeholder="예: 정기 회비"
+                                maxLength={100}
+                                required
+                                onChange={(event) =>
+                                  updateCategory(category.id, {
+                                    name: event.target.value,
+                                  })
+                                }
+                              />
+                            </label>
                             <span className="fee-category-actions">
                               <button
                                 type="button"
@@ -348,7 +374,7 @@ export function FeeItemModal({
                                   setEditingCategoryId(category.id)
                                 }
                               >
-                                수정
+                                {selectedMembers.length ? '회원 변경' : '회원 선택'}
                               </button>
                               {categories.length > 1 && (
                                 <button
@@ -376,7 +402,8 @@ export function FeeItemModal({
                               min={0}
                               max={10000000}
                               step={1}
-                              value={category.amount}
+                              value={category.amount || ''}
+                              placeholder="0"
                               onChange={(event) =>
                                 updateCategory(category.id, {
                                   amount:
@@ -470,21 +497,18 @@ export function FeeItemModal({
               </section>
             </div>
 
-            {error && (
-              <p className="fee-create-error" role="alert">
-                {error}
-              </p>
-            )}
           </div>
 
-          <footer className="fee-create-footer">
-            <small>
-              {isEditing
-                ? '변경 내용을 확인한 뒤 저장해 주세요. 삭제한 납부 항목은 복구할 수 없습니다.'
-                : '카테고리별 금액과 대상 회원을 확인한 뒤 등록해 주세요.'}
-            </small>
+          <footer className={`fee-create-footer${error ? ' has-error' : ''}`}>
+            <div className="fee-create-footer-message">
+              {error ? <p className="fee-create-error" role="alert">{error}</p> : <small>
+                {isEditing
+                  ? '변경 내용을 확인한 뒤 저장해 주세요. 삭제한 납부 항목은 복구할 수 없습니다.'
+                  : '카테고리별 금액과 대상 회원을 확인한 뒤 등록해 주세요.'}
+              </small>}
+            </div>
 
-            <div>
+            <div className="fee-create-footer-actions">
               {isEditing && onDelete && (
                 <button
                   type="button"

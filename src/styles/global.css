@@ -143,3 +143,54 @@ main { min-height: 100vh; margin-left: 232px; padding: 96px 38px 48px; }.content
 @media (prefers-reduced-motion: reduce) {
   .sidebar { transition: none; }
 }
+
+/* Shared empty, error, and recovery messages. */
+.feedback-state {
+  display: flex;
+  min-height: 148px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  border: 1px solid #e5ebef;
+  border-radius: 14px;
+  background: #f8fafb;
+  text-align: center;
+}
+.feedback-state-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  place-items: center;
+  border-radius: 12px;
+  color: #45647e;
+  background: #eaf1f5;
+}
+.feedback-state-icon svg { width: 20px; height: 20px; }
+.feedback-state-copy strong { display: block; color: #243545; font-size: 14px; font-weight: 700; line-height: 1.5; }
+.feedback-state-copy p { max-width: 390px; margin: 5px 0 0; color: #6b7884; font-size: 12px; line-height: 1.6; }
+.feedback-state.is-error { border-color: #f0dcda; background: #fdf8f7; }
+.feedback-state.is-error .feedback-state-icon { color: #af6054; background: #f9e9e5; }
+.feedback-state.is-compact { min-height: 0; flex-direction: row; justify-content: flex-start; gap: 10px; padding: 12px 14px; text-align: left; }
+.feedback-state.is-compact .feedback-state-icon { width: 32px; height: 32px; border-radius: 9px; }
+.feedback-state.is-compact .feedback-state-icon svg { width: 17px; height: 17px; }
+.feedback-state.is-compact .feedback-state-copy strong { font-size: 12px; }
+.feedback-state.is-compact .feedback-state-copy p { margin-top: 2px; font-size: 11px; }
+.feedback-state-action { margin-top: 2px; }
+.feedback-reset-button { min-height: 34px; padding: 0 13px; border: 1px solid #cbd9e2; border-radius: 8px; color: #214a6b; background: #fff; font-size: 12px; font-weight: 700; }
+.feedback-reset-button:hover { border-color: #214a6b; background: #f5f9fb; }
+
+:where(p, div)[role="alert"]:not([class]) {
+  margin: 12px 0;
+  padding: 11px 14px;
+  border: 1px solid #f0dcda;
+  border-radius: 10px;
+  color: #8e463d;
+  background: #fdf8f7;
+  font-size: 12px;
+  line-height: 1.6;
+}
+div[role="alert"]:not([class]) > p { margin: 0; }
+div[role="alert"]:not([class]):has(> button) { display: flex; align-items: center; justify-content: space-between; gap: 12px; }

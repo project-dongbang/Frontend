@@ -8,12 +8,14 @@ import { attendanceApi } from '../../api/services'
 import { useSession } from '../../context/SessionContext'
 import { errorMessage } from '../../api/client'
 import type { MemberAttendanceItem } from './attendanceMock'
+import { FeedbackState } from '../../components/common/FeedbackState'
 
 export function MemberAttendancePage() {
     const navigate = useNavigate()
   const { activeOrganization } = useSession()
   const [items, setItems] = useState<MemberAttendanceItem[]>([])
   const [requestError, setRequestError] = useState('')
+  const [checkInSuccess, setCheckInSuccess] = useState(false)
   const [checkInEventId, setCheckInEventId] = useState('')
   const [qrToken, setQrToken] = useState('')
   const [checkingIn, setCheckingIn] = useState(false)
@@ -24,7 +26,7 @@ export function MemberAttendancePage() {
       const nextItems = (result.records ?? []).map((item) => ({ id: Number(item.eventId), title: String(item.title), date: new Date(String(item.startsAt)).toLocaleString('ko-KR'), status: item.displayStatus === 'WAITING' ? 'scheduled' as const : item.status === 'PRESENT' ? 'present' as const : 'absent' as const, checkInTime: item.checkedInAt ? new Date(String(item.checkedInAt)).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '-' }))
       setItems(nextItems)
       if (nextItems[0]) setCheckInEventId((current) => current || String(nextItems[0].id))
-    }).catch((error) => setRequestError(errorMessage(error)))
+    }).catch((error) => { setCheckInSuccess(false); setRequestError(errorMessage(error)) })
   }, [activeOrganization])
   const submitCheckIn = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -34,8 +36,9 @@ export function MemberAttendancePage() {
       await attendanceApi.checkIn(activeOrganization.organizationId, checkInEventId, qrToken.trim())
       setItems((current) => current.map((item) => String(item.id) === checkInEventId ? { ...item, status: 'present', checkInTime: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) } : item))
       setQrToken('')
-      setRequestError('출석이 확인되었습니다.')
-    } catch (error) { setRequestError(errorMessage(error)) }
+      setRequestError('출석이 확인됐어요.')
+      setCheckInSuccess(true)
+    } catch (error) { setCheckInSuccess(false); setRequestError(errorMessage(error)) }
     finally { setCheckingIn(false) }
   }
   return (
@@ -50,7 +53,7 @@ export function MemberAttendancePage() {
         </header>
 
         <section className="member-attendance-card">
-          {requestError && <p role="alert">{requestError}</p>}
+          {requestError && <p className={checkInSuccess ? 'member-attendance-success' : undefined} role={checkInSuccess ? 'status' : 'alert'}>{requestError}</p>}
           <form className="member-checkin-form" onSubmit={(event) => void submitCheckIn(event)}>
             <label>출석할 행사<select value={checkInEventId} onChange={(event) => setCheckInEventId(event.target.value)} required><option value="" disabled>행사를 선택하세요</option>{items.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label>
             <label>운영진의 체크인 코드<input value={qrToken} onChange={(event) => setQrToken(event.target.value)} placeholder="QR 코드의 체크인 코드를 입력하세요" required /></label>
@@ -103,6 +106,7 @@ export function MemberAttendancePage() {
                     <td>{item.checkInTime}</td>
                   </tr>
                 ))}
+                {items.length === 0 && <tr><td colSpan={4}><FeedbackState compact title="아직 출석 기록이 없어요" description="행사에 참여하면 내 출석 내역이 여기에 표시돼요." /></td></tr>}
               </tbody>
             </table>
           </div>

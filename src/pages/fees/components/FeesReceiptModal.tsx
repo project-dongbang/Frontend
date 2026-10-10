@@ -107,7 +107,7 @@ export function FeesReceiptModal({
                 {transaction.proofText}
               </strong>
 
-              {transaction.evidenceUrl ? <a href={transaction.evidenceUrl} target="_blank" rel="noreferrer">증빙 파일 열기</a> : <small>등록된 증빙 파일이 없습니다.</small>}
+              {transaction.evidenceUrl ? <a href={transaction.evidenceUrl} target="_blank" rel="noreferrer">증빙 파일 열기</a> : <small>아직 등록된 증빙 파일이 없어요.</small>}
             </div>
 
             <div className="fees-receipt-privacy">
@@ -127,7 +127,7 @@ export function FeesReceiptModal({
             </div>
 
             <div className="fees-receipt-paper">
-              {transaction.evidenceUrl ? <a href={transaction.evidenceUrl} target="_blank" rel="noreferrer">실제 영수증 파일 보기 ↗</a> : <p>서버 응답에 영수증 파일 주소가 없습니다.</p>}
+              {transaction.evidenceUrl ? <a href={transaction.evidenceUrl} target="_blank" rel="noreferrer">실제 영수증 파일 보기 ↗</a> : <p>영수증 파일을 열 수 없어요. 운영진에게 문의해 주세요.</p>}
               {transaction.memo && <><div className="fees-receipt-divider" /><p>{transaction.memo}</p></>}
             </div>
 

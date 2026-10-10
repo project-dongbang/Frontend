@@ -7,6 +7,7 @@ import type { AttendanceFilter } from './AttendancePage'
 import searchIcon from '../../assets/search.svg'
 import { AttendanceEditModal } from './components/AttendanceEditModal'
 import { AttendanceMemberRow } from './components/AttendanceMemberRow'
+import { FeedbackState } from '../../components/common/FeedbackState'
 
 type AttendanceRosterProps = {
   eventTitle: string
@@ -129,9 +130,11 @@ export function AttendanceRoster({
               />
             ))
           ) : (
-            <div className="attendance-empty">
-              {eventTitle ? totalCount ? '조건에 맞는 참가자가 없습니다.' : '아직 참가 신청자가 없습니다.' : '행사를 선택해 주세요.'}
-            </div>
+            <FeedbackState
+              title={eventTitle ? totalCount ? '조건에 맞는 참가자가 없어요' : '아직 참가 신청자가 없어요' : '행사를 선택해 주세요'}
+              description={eventTitle ? totalCount ? '검색어나 출석 상태를 바꿔 보세요.' : '참가자가 생기면 이곳에서 출석을 관리할 수 있어요.' : '행사를 선택하면 참가자 명단이 표시돼요.'}
+              action={totalCount > 0 ? <button type="button" className="feedback-reset-button" onClick={() => { onSearchChange(''); onFilterChange('all') }}>조건 초기화</button> : undefined}
+            />
           )}
         </div>
 

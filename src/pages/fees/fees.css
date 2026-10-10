@@ -257,10 +257,7 @@
 }
 
 .fees-placeholder {
-  padding: 60px 20px;
-  color: var(--color-text-secondary);
-  text-align: center;
-  font-size: 13px;
+  padding: 18px;
 }
 
 @media (max-width: 760px) {
@@ -1676,18 +1673,47 @@
   background: #ff6b4a;
 }
 
-.fee-category-name {
-  width: 125px;
-
-  border: 0;
-  outline: 0;
-
-  color: #17212b;
-  background: transparent;
-
-  font: inherit;
-  font-weight: 800;
+.fee-category-name-field {
+  display: grid;
+  width: 170px;
+  min-width: 0;
+  gap: 5px;
+  color: #566675;
+  font-size: 11px;
+  font-weight: 700;
 }
+
+.fee-category-name-field > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fee-category-name-field em {
+  color: #c2543b;
+  font-size: 10px;
+  font-style: normal;
+}
+
+.fee-category-name {
+  width: 100%;
+  height: 38px;
+  min-width: 0;
+  padding: 0 10px;
+  border: 1px solid #cbd7df;
+  border-radius: 9px;
+  outline: 0;
+  color: #17212b;
+  background: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.fee-category-name::placeholder { color: #8795a1; font-weight: 500; }
+.fee-category-name-field.is-empty .fee-category-name { border-color: #ddaa9c; background: #fffaf8; }
+.fee-category-name:focus { border-color: #214a6b; box-shadow: 0 0 0 3px #e9f0f5; }
+.fee-category-name-field.is-empty .fee-category-name:focus { border-color: #214a6b; background: #fff; }
 
 .fee-category-header-actions {
   display: flex;
@@ -2501,7 +2527,16 @@
 }
 
 /* footer button is inside a div in TSX */
-.fee-create-footer > div {
+.fee-create-footer-message {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.fee-create-footer .fee-create-error {
+  margin: 0;
+}
+
+.fee-create-footer-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -2664,6 +2699,12 @@
     padding: 12px 18px;
   }
 
+  .fee-create-footer.has-error {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
   .fee-create-footer small {
     display: none;
   }
@@ -2673,9 +2714,8 @@
     flex-wrap: wrap;
   }
 
-  .fee-category-name {
-    min-width: 0;
-    flex: 1 1 120px;
+  .fee-category-name-field {
+    flex: 1 1 160px;
   }
 
   .fee-category-actions {

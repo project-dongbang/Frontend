@@ -477,6 +477,16 @@
   font-size: 13px;
 }
 
+.member-attendance-success {
+  margin: 12px 0;
+  padding: 11px 14px;
+  border: 1px solid #cde6d9;
+  border-radius: 10px;
+  color: #216749;
+  background: #f2faf5;
+  font-size: 12px;
+}
+
 .attendance-scroll-guide {
   margin: 0;
   padding: 14px 20px 18px;
@@ -665,6 +675,8 @@
   gap: 8px;
   margin: 12px 0;
 }
+
+.attendance-picker-list .feedback-state { min-height: 174px; }
 
 .attendance-picker-row {
   width: 100%;
