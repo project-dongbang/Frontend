@@ -25,8 +25,9 @@ test('the API rewrite precedes the SPA fallback and preserves the API path', asy
   assert.ok(config.headers[0].headers.some((header) => header.key === 'x-vercel-enable-rewrite-caching' && header.value === '0'))
 })
 
-test('production uses the same-origin API unless explicitly configured otherwise', () => {
+test('production always uses the same-origin API even when an old API URL remains configured', () => {
   assert.equal(resolveApiBaseUrl(undefined, true), '')
-  assert.equal(resolveApiBaseUrl('https://dongbang-frontend.vercel.app/', true), 'https://dongbang-frontend.vercel.app')
+  assert.equal(resolveApiBaseUrl('https://api.3.36.171.188.nip.io/', true), '')
   assert.equal(resolveApiBaseUrl(undefined, false), 'http://localhost:8080')
+  assert.equal(resolveApiBaseUrl('http://localhost:9090/', false), 'http://localhost:9090')
 })

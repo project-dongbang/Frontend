@@ -13,9 +13,9 @@ npm run dev
 
 운영 Vercel에서는 `vercel.json`이 브라우저의 `/api/*` 요청을
 `https://api.3.36.171.188.nip.io/api/*`로 전달합니다. 운영 빌드는
-`VITE_API_BASE_URL`이 없을 때 같은 출처의 `/api/*`를 사용합니다.
-Vercel에 이전 API 주소로 설정한 `VITE_API_BASE_URL`이 남아 있다면 제거하고
-다시 배포해야 합니다. 로컬 Vite에서 직접 API를 호출할 때만 `.env.example`의
+항상 같은 출처의 `/api/*`를 사용합니다. 이전 API 주소가 Vercel의
+`VITE_API_BASE_URL`에 남아 있어도 운영 빌드에는 적용되지 않습니다.
+설정값도 제거해 혼동을 막으세요. 로컬 Vite에서 직접 API를 호출할 때만 `.env.example`의
 값을 `.env.local`에 설정합니다.
 
 OAuth 시작 요청과 백엔드 콜백도 반드시 Vercel의 `/api` 프록시를 지나야
