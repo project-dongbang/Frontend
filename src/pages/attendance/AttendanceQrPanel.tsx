@@ -33,20 +33,28 @@ export function AttendanceQrPanel({
 }: AttendanceQrPanelProps) {
   const [pickerOpen, setPickerOpen] = useState(false)
 
-  const [localSessionStatus, setLocalSessionStatus] = useState<AttendanceSessionStatus | null>(null)
-  const [localQrToken, setLocalQrToken] = useState('')
+  const [currentTime, setCurrentTime] = useState(Date.now)
   const [requestError, setRequestError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const [copied, setCopied] = useState(false)
   const [qrImage, setQrImage] = useState({ url: '', data: '' })
 
-  const apiSessionStatus: AttendanceSessionStatus = selectedEvent?.sessionStatus === 'ACTIVE'
+  const expired = Boolean(selectedEvent?.expiresAt && Date.parse(selectedEvent.expiresAt) <= currentTime)
+  const sessionStatus: AttendanceSessionStatus = selectedEvent?.sessionStatus === 'ACTIVE' && !expired
     ? 'active'
-    : selectedEvent?.sessionStatus === 'CLOSED' || selectedEvent?.sessionStatus === 'EXPIRED' ? 'ended' : 'ready'
-  const sessionStatus = localSessionStatus ?? apiSessionStatus
-  const qrToken = localQrToken || selectedEvent?.qrToken || ''
+    : selectedEvent?.sessionStatus === 'CLOSED' || selectedEvent?.sessionStatus === 'EXPIRED' || expired ? 'ended' : 'ready'
+  const qrToken = selectedEvent?.qrToken || ''
   const checkInUrl = organizationId && selectedEvent && qrToken && typeof window !== 'undefined'
     ? `${window.location.origin}${checkInPath(organizationId, selectedEvent.id, qrToken)}`
     : ''
+
+  useEffect(() => {
+    if (!selectedEvent?.expiresAt || selectedEvent.sessionStatus !== 'ACTIVE') return
+    const remaining = Date.parse(selectedEvent.expiresAt) - Date.now()
+    if (remaining <= 0) return
+    const timer = window.setTimeout(() => setCurrentTime(Date.now()), remaining + 100)
+    return () => window.clearTimeout(timer)
+  }, [selectedEvent?.expiresAt, selectedEvent?.sessionStatus])
 
   useEffect(() => {
     let cancelled = false
@@ -59,32 +67,27 @@ export function AttendanceQrPanel({
 
   const handleEventChange = (eventId: string) => {
     onEventChange(eventId)
-
-    // 다른 행사 선택 시 출석 세션 초기화
-    setLocalSessionStatus(null)
-    setLocalQrToken('')
+    setRequestError('')
   }
 
   const handleStartAttendance = async () => {
-    if (!selectedEvent) return
+    if (!selectedEvent || submitting) return
+    setSubmitting(true)
     try {
-      const result = await onStart?.(selectedEvent.id)
-      if (result?.session.qrToken) {
-        setLocalQrToken(result.session.qrToken)
-        setLocalSessionStatus('active')
-        setRequestError('')
-      }
+      await onStart?.(selectedEvent.id)
+      setRequestError('')
     } catch (error) { setRequestError(errorMessage(error)) }
+    finally { setSubmitting(false) }
   }
 
   const handleEndAttendance = async () => {
-    if (!selectedEvent) return
+    if (!selectedEvent || submitting) return
+    setSubmitting(true)
     try {
       await onEnd?.(selectedEvent.id)
-      setLocalSessionStatus('ended')
-      setLocalQrToken('')
       setRequestError('')
     } catch (error) { setRequestError(errorMessage(error)) }
+    finally { setSubmitting(false) }
   }
 
   const copyQrToken = async () => {
@@ -137,7 +140,7 @@ export function AttendanceQrPanel({
               {!isActive && (
                 <div className="attendance-qr-overlay">
                   {isEnded
-                    ? '출석이 종료되었습니다.'
+                    ? '출석이 종료되었습니다. 새 QR로 다시 열 수 있어요.'
                     : '출석을 시작하면 QR이 활성화됩니다.'}
                 </div>
               )}
@@ -167,7 +170,7 @@ export function AttendanceQrPanel({
                   {isActive
                     ? 'QR 체크인이 활성화되어 있어요.'
                     : isEnded
-                      ? 'QR 체크인이 종료되었어요.'
+                      ? '새 QR로 다시 열 수 있어요. 기존 출석 기록은 유지됩니다.'
                       : '출석 시작 버튼을 눌러 QR을 활성화하세요.'}
                 </span>
               </div>
@@ -176,16 +179,16 @@ export function AttendanceQrPanel({
                 <button
                   type="button"
                   className="attendance-session-start"
-                  disabled={isActive || isEnded}
+                  disabled={isActive || submitting}
                   onClick={handleStartAttendance}
                 >
-                  출석 시작
+                  {submitting && !isActive ? '처리 중…' : isEnded ? '출석 다시 열기' : '출석 시작'}
                 </button>
 
                 <button
                   type="button"
                   className="attendance-session-end"
-                  disabled={!isActive}
+                  disabled={!isActive || submitting}
                   onClick={handleEndAttendance}
                 >
                   출석 종료

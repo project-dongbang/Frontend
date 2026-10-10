@@ -4,6 +4,7 @@ import type {
   FeePaymentMember,
   FeePaymentStatus,
 } from '../feesMock'
+import { FeedbackState } from '../../../components/common/FeedbackState'
 
 type FeesPaymentsProps = {
   collections: FeeCollection[]
@@ -62,7 +63,7 @@ export function FeesPayments({
   if (!selectedCollection) {
     return (
       <section className="fees-card fees-placeholder">
-        등록된 회비가 없습니다.
+        <FeedbackState title="아직 등록된 납부 항목이 없어요" description="납부 항목을 등록하면 멤버별 납부 현황이 여기에 표시돼요." />
       </section>
     )
   }
@@ -196,7 +197,7 @@ export function FeesPayments({
           ) : (
             <tr>
               <td colSpan={5} className="fees-empty">
-                해당 상태의 멤버가 없습니다.
+                <FeedbackState compact title="이 상태에 해당하는 멤버가 없어요" description="다른 납부 상태를 선택해 보세요." />
               </td>
             </tr>
           )}

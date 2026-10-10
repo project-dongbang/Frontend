@@ -130,7 +130,7 @@ export function FeesPage() {
   const handleFeeItemSave = async (
     draft: FeeCollectionDraft,
   ) => {
-    if (!activeOrganization) return
+    if (!activeOrganization) throw new Error('동아리를 먼저 선택해 주세요.')
     const base = { title: draft.title, dueDate: draft.dueDate.replaceAll('.', '-'), description: draft.description, paymentAccount: { bankName: draft.bank, accountNumber: draft.accountNumber, accountHolder: draft.accountHolder } }
     const categories = draft.categories.map((category) => ({ name: category.name, amount: category.amount, targetMembershipIds: category.memberIds.map(Number).filter(Number.isFinite) }))
     try {

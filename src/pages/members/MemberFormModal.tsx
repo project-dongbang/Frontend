@@ -30,7 +30,7 @@ export function MemberFormModal({ member, onClose, onSave }: Props) {
           <option value="활동">활동</option><option value="휴면">휴면</option>
         </Select>
       </div>
-      <p className="member-form-hint">기수·직책·활동 상태를 수정할 수 있어요. 대표의 활동 상태는 변경할 수 없습니다.{status === '휴면' && member.status === '활동' ? ' 휴면으로 바꾸면 예정된 행사 신청이 취소돼요.' : ''}{status === '활동' && member.status === '휴면' ? ' 활동 상태로 돌려도 취소된 행사 신청은 자동 복구되지 않아요.' : ''}</p>
+      <p className="member-form-hint">기수·직책·활동 상태를 수정할 수 있어요. 대표의 활동 상태는 변경할 수 없어요.{status === '휴면' && member.status === '활동' ? ' 휴면으로 바꾸면 예정된 행사 신청이 취소돼요.' : ''}{status === '활동' && member.status === '휴면' ? ' 활동 상태로 돌려도 취소된 행사 신청은 자동 복구되지 않아요.' : ''}</p>
       <Button type="submit" className="member-save-button">정보 저장</Button>
     </form>
   </Modal>

@@ -6,6 +6,7 @@ import { feesApi } from '../../../api/services'
 import { errorMessage } from '../../../api/client'
 import { useSession } from '../../../context/SessionContext'
 import { LedgerTransactionEditModal } from './LedgerTransactionEditModal'
+import { FeedbackState } from '../../../components/common/FeedbackState'
 
 type FeesLedgerProps = {
   transactions: FeesTransaction[]
@@ -143,6 +144,7 @@ export function FeesLedger({
                   </td>
                 </tr>
               ))}
+              {transactions.length === 0 && <tr><td colSpan={6}><FeedbackState compact title="아직 회비 사용 내역이 없어요" description="수입이나 지출이 등록되면 이곳에서 확인할 수 있어요." /></td></tr>}
             </tbody>
           </table>
         </div>

@@ -55,10 +55,10 @@ export function AttendancePage() {
     let cancelled = false
     attendanceApi.status(organizationId, selectedEventId).then((raw) => {
       if (cancelled) return
-      const result = raw as { records?: Array<Record<string, unknown>>; session?: { status?: AttendanceEvent['sessionStatus']; qrToken?: string } }
+      const result = raw as { records?: Array<Record<string, unknown>>; session?: { status?: AttendanceEvent['sessionStatus']; qrToken?: string; expiresAt?: string } }
       setMembers((result.records ?? []).map((member) => ({ id: String(member.attendanceId), name: String(member.memberName), studentId: String(member.studentNumber), generation: '-', status: member.status === 'PRESENT' ? 'present' : 'absent', checkedAt: member.checkedInAt ? new Date(String(member.checkedInAt)).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : null, version: Number(member.version ?? 0) })))
       setMembersOrganizationId(organizationId)
-      setEvents((current) => current.map((event) => event.id === selectedEventId ? { ...event, sessionStatus: result.session?.status ?? event.sessionStatus, qrToken: result.session?.qrToken } : event))
+      setEvents((current) => current.map((event) => event.id === selectedEventId ? { ...event, sessionStatus: result.session?.status ?? event.sessionStatus, qrToken: result.session?.qrToken, expiresAt: result.session?.expiresAt } : event))
       setRequestError('')
     }).catch((error) => {
       if (cancelled) return
@@ -112,7 +112,7 @@ export function AttendancePage() {
 }
 
 const handleDownload = () => {
-  if (!currentMembers.length) { setRequestError('내보낼 출석 기록이 없습니다.'); return }
+  if (!currentMembers.length) { setRequestError('내보낼 출석 기록이 없어요. 행사와 참가자 명단을 확인해 주세요.'); return }
   const quote = (value: string) => `"${value.replaceAll('"', '""')}"`
   const rows = [
     ['행사명', '이름', '학번', '출석 상태', '체크인 시각'],
@@ -136,9 +136,9 @@ const handleDownload = () => {
         attendanceApi.status(activeOrganization.organizationId, selectedEventId),
       ]).then(([eventsRaw, statusRaw]) => {
         const eventsResult = eventsRaw as { events?: Array<Record<string, unknown>> }
-        const statusResult = statusRaw as { records?: Array<Record<string, unknown>>; session?: { status?: AttendanceEvent['sessionStatus']; qrToken?: string } }
+        const statusResult = statusRaw as { records?: Array<Record<string, unknown>>; session?: { status?: AttendanceEvent['sessionStatus']; qrToken?: string; expiresAt?: string } }
         const mappedEvents = (eventsResult.events ?? []).map((event) => ({ id: String(event.eventId), title: String(event.title), start: String(event.startsAt), location: String(event.location ?? ''), sessionStatus: event.attendanceSessionStatus as AttendanceEvent['sessionStatus'] }))
-        setEvents(mappedEvents.map((event) => event.id === selectedEventId ? { ...event, sessionStatus: statusResult.session?.status ?? event.sessionStatus, qrToken: statusResult.session?.qrToken } : event))
+        setEvents(mappedEvents.map((event) => event.id === selectedEventId ? { ...event, sessionStatus: statusResult.session?.status ?? event.sessionStatus, qrToken: statusResult.session?.qrToken, expiresAt: statusResult.session?.expiresAt } : event))
         setMembers((statusResult.records ?? []).map((member) => ({ id: String(member.attendanceId), name: String(member.memberName), studentId: String(member.studentNumber), generation: '-', status: member.status === 'PRESENT' ? 'present' : 'absent', checkedAt: member.checkedInAt ? new Date(String(member.checkedInAt)).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : null, version: Number(member.version ?? 0) })))
         setEventsOrganizationId(activeOrganization.organizationId)
         setMembersOrganizationId(activeOrganization.organizationId)
@@ -188,10 +188,14 @@ const handleDownload = () => {
             onStart={async (eventId) => {
               if (!activeOrganization) throw new Error('동아리를 먼저 선택해 주세요.')
               const response = await attendanceApi.start(activeOrganization.organizationId, eventId)
-              setEvents((current) => current.map((event) => event.id === eventId ? { ...event, sessionStatus: 'ACTIVE', qrToken: response.session.qrToken } : event))
+              setEvents((current) => current.map((event) => event.id === eventId ? { ...event, sessionStatus: 'ACTIVE', qrToken: response.session.qrToken, expiresAt: response.session.expiresAt } : event))
               return response
             }}
-            onEnd={async (eventId) => { if (activeOrganization) await attendanceApi.close(activeOrganization.organizationId, eventId) }}
+            onEnd={async (eventId) => {
+              if (!activeOrganization) return
+              await attendanceApi.close(activeOrganization.organizationId, eventId)
+              setEvents((current) => current.map((event) => event.id === eventId ? { ...event, sessionStatus: 'CLOSED', qrToken: undefined } : event))
+            }}
           />
 
           <AttendanceRoster

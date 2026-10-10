@@ -4,6 +4,7 @@ import kakaoIcon from '../../../assets/kakao.svg'
 import { authApi } from '../../../api/services'
 import { useSearchParams } from 'react-router-dom'
 import './LoginPage.css'
+import { FeedbackState } from '../../../components/common/FeedbackState'
 
 export function LoginPage() {
   const [searchParams] = useSearchParams()
@@ -24,7 +25,12 @@ export function LoginPage() {
           <button className="social-button google-button" type="button" onClick={() => login('google')}><img src={googleIcon} alt="" />Google로 계속하기</button>
           <button className="social-button kakao-button" type="button" onClick={() => login('kakao')}><img src={kakaoIcon} alt="" />카카오로 계속하기</button>
         </div>
-        {(loginError === 'cancelled' || loginError === 'failed') && <p className="login-error" role="alert">{loginError === 'cancelled' ? '로그인이 취소됐어요. 원할 때 다시 시도해 주세요.' : '로그인을 완료하지 못했어요. 잠시 후 다시 시도해 주세요.'}</p>}
+        {(loginError === 'cancelled' || loginError === 'failed') && <FeedbackState
+          kind="error"
+          compact
+          title={loginError === 'cancelled' ? '로그인이 취소됐어요' : '로그인을 완료하지 못했어요'}
+          description={loginError === 'cancelled' ? '원할 때 다시 로그인해 주세요.' : '아래에서 로그인 방법을 다시 선택해 주세요.'}
+        />}
         <p className="login-helper">별도의 비밀번호 없이 안전하고 간편하게 로그인합니다.</p>
       </section>
       <footer>© 2026 DongBang</footer>

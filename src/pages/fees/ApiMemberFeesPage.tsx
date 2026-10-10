@@ -96,7 +96,7 @@ export function ApiMemberFeesPage() {
         <div className="member-fees-summary">
           <article className="member-fees-summary-card is-balance"><span>현재 잔여금</span><strong>{ledgerLoaded ? `₩${summary.balance.toLocaleString('ko-KR')}` : '—'}</strong><small>회원 전체 공개</small></article>
           <article className="member-fees-summary-card is-expense"><span>누적 출금</span><strong>{ledgerLoaded ? `₩${summary.expense.toLocaleString('ko-KR')}` : '—'}</strong><small>공개 장부 기준</small></article>
-          <article className="member-fees-summary-card is-payment"><span>내 납부 현황</span><strong>{targetsLoaded ? targets.length ? unpaidCount ? `${unpaidCount}건 미납` : '모두 납부 완료' : '내역 없음' : '—'}</strong><small>{targetsLoaded ? targets.length ? `전체 ${targets.length}개 납부 항목` : '등록된 납부 항목이 없습니다.' : targetsError ? '납부 항목을 확인할 수 없어요.' : '납부 항목을 불러오는 중이에요.'}</small></article>
+          <article className="member-fees-summary-card is-payment"><span>내 납부 현황</span><strong>{targetsLoaded ? targets.length ? unpaidCount ? `${unpaidCount}건 미납` : '모두 납부 완료' : '내역 없음' : '—'}</strong><small>{targetsLoaded ? targets.length ? `전체 ${targets.length}개 납부 항목` : '아직 납부할 항목이 없어요.' : targetsError ? '납부 항목을 확인할 수 없어요.' : '납부 항목을 불러오는 중이에요.'}</small></article>
         </div>
         {targets.length > 1 && <section className="member-fee-selector" aria-label="납부 항목 선택">
           <h2>내 납부 항목</h2>

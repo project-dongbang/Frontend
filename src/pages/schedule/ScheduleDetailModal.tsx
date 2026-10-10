@@ -134,7 +134,7 @@ export function ScheduleDetailModal({
 
             <div className="schedule-detail-description">
               {item.description ||
-                '추가 안내가 없습니다.'}
+                '별도의 안내가 없어요.'}
             </div>
             {requestError && <p role="alert">{requestError}</p>}
 {!isMember && (

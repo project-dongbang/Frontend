@@ -17,6 +17,7 @@ export type AttendanceEvent = {
   location: string
   sessionStatus?: 'ACTIVE' | 'EXPIRED' | 'CLOSED' | 'NOT_STARTED'
   qrToken?: string
+  expiresAt?: string
 }
 
 export const attendanceEvents: AttendanceEvent[] = [

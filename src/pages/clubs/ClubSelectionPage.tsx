@@ -5,6 +5,7 @@ import { useClubDialog } from './useClubDialog'
 import './ClubPage.css'
 import { useSession } from '../../context/SessionContext'
 import { OrganizationAvatar } from '../../components/common/OrganizationAvatar'
+import { FeedbackState } from '../../components/common/FeedbackState'
 
 export function ClubSelectionPage() {
   const navigate = useNavigate()
@@ -32,7 +33,7 @@ export function ClubSelectionPage() {
           </header>
           <div className="club-choice-body">
             <p>{loading ? '동아리 목록을 불러오고 있어요…' : '함께하는 동아리를 선택해 주세요.'}</p>
-            {!loading && organizationsError && <div role="alert"><p>동아리 목록을 불러오지 못했어요. {organizationsError}</p><Button variant="secondary" onClick={() => void refresh()}>다시 시도</Button></div>}
+            {!loading && organizationsError && <FeedbackState kind="error" title="동아리 목록을 불러오지 못했어요" description={organizationsError} action={<Button variant="secondary" onClick={() => void refresh()}>다시 시도</Button>} />}
             {organizations.map((organization) => {
               const active = organization.organizationId === activeOrganization?.organizationId
               const path = organization.myRole === 'MEMBER' ? '/dashboard?role=member' : '/dashboard'
@@ -42,7 +43,7 @@ export function ClubSelectionPage() {
                 <em>{active ? '✓' : '→'}</em>
               </button>
             })}
-            {!loading && !organizationsError && organizations.length === 0 && <p>참여 중인 동아리가 없습니다. 새 동아리를 만들거나 초대 코드로 참여해 주세요.</p>}
+            {!loading && !organizationsError && organizations.length === 0 && <FeedbackState title="아직 참여 중인 동아리가 없어요" description="새 동아리를 만들거나 받은 초대 코드로 참여해 보세요." />}
           </div>
           <footer>
             <Button onClick={() => navigate('/clubs/new')}>+ 동아리 만들기</Button>
