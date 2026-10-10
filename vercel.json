@@ -1,5 +1,18 @@
 {
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store" },
+        { "key": "x-vercel-enable-rewrite-caching", "value": "0" }
+      ]
+    }
+  ],
   "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://api.3.36.171.188.nip.io/api/$1"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
